@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<IsPackable>false</IsPackable>
+		<LangVersion>Latest</LangVersion>
+		<AssemblyName>Services</AssemblyName>
+		<RootNamespace>Services</RootNamespace>
+		<TargetFramework>net7.0</TargetFramework>
+		<TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+		<CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+			<_Parameter1>Services.UnitTests</_Parameter1>
+		</AssemblyAttribute>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\Systems\20.Systems.csproj" />
+	  <ProjectReference Include="..\Systems\20.Systems.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <EditorConfigFiles Remove="C:\Users\Fortune\source\repos\finecontroller\.editorconfig" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Include="C:\Users\Fortune\source\repos\finecontroller\.editorconfig" />
+	</ItemGroup>
+
+</Project>
