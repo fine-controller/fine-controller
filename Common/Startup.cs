@@ -20,10 +20,9 @@ namespace Common
 				throw new ArgumentNullException(nameof(appSettings));
 			}
 
-			services.AddSingleton<AppData>();
 			services.AddSingleton(appSettings);
 			services.AddSingleton(typeof(IServiceProvider<>), typeof(ServiceProvider<>));
-			services.AddSingleton<ICustomResourceDefinitionComparer, CustomResourceDefinitionComparerImpl>();
+			services.AddSingleton<ICustomResourceDefinitionComparer, CustomResourceDefinitionComparer>();
 
 			return services;
 		}

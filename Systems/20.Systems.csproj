@@ -25,55 +25,72 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <None Include="C:\Users\Fortune\source\repos\finecontroller\.editorconfig" />
+	  <None Update="KubernetesSystem\Assets\Helm\darwin-amd64">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Update="KubernetesSystem\Assets\Helm\darwin-arm64">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Update="KubernetesSystem\Assets\Helm\linux-amd64">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Update="KubernetesSystem\Assets\Helm\linux-arm64">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Update="KubernetesSystem\Assets\Helm\windows-amd64">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Update="KubernetesSystem\Assets\Kind\darwin-amd64">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Update="KubernetesSystem\Assets\Kind\darwin-arm64">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Update="KubernetesSystem\Assets\Kind\ingress-template.yaml">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Update="KubernetesSystem\Assets\Kind\linux-amd64">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Update="KubernetesSystem\Assets\Kind\linux-arm64">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Update="KubernetesSystem\Assets\Kind\windows-amd64">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Update="KubernetesSystem\Assets\Kind\cluster-configuration.yaml">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Update="KubernetesSystem\Assets\Kind\ingress-nginx.yaml">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Update="KubernetesSystem\Assets\KubeCtl\darwin-adm64">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Update="KubernetesSystem\Assets\KubeCtl\darwin-arm64">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Update="KubernetesSystem\Assets\KubeCtl\linux-amd64">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Update="KubernetesSystem\Assets\KubeCtl\linux-arm64">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Update="KubernetesSystem\Assets\KubeCtl\windows-amd64">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
 	</ItemGroup>
 
 	<ItemGroup>
-	  <None Update="HelmSystem\Helm\darwin-amd64">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </None>
-	  <None Update="HelmSystem\Helm\darwin-arm64">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </None>
-	  <None Update="HelmSystem\Helm\linux-amd64">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </None>
-	  <None Update="HelmSystem\Helm\linux-arm64">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </None>
-	  <None Update="HelmSystem\Helm\windows-amd64">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </None>
-	  <None Update="KubernetesSystem\Kind\darwin-amd64">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </None>
-	  <None Update="KubernetesSystem\Kind\darwin-arm64">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </None>
-	  <None Update="KubernetesSystem\Kind\linux-amd64">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </None>
-	  <None Update="KubernetesSystem\Kind\linux-arm64">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </None>
-	  <None Update="KubernetesSystem\Kind\windows-amd64">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </None>
-	  <None Update="KubernetesSystem\KubeCtl\darwin-adm64">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </None>
-	  <None Update="KubernetesSystem\KubeCtl\darwin-arm64">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </None>
-	  <None Update="KubernetesSystem\KubeCtl\linux-amd64">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </None>
-	  <None Update="KubernetesSystem\KubeCtl\linux-arm64">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </None>
-	  <None Update="KubernetesSystem\KubeCtl\windows-amd64">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </None>
+	  <EditorConfigFiles Remove="C:\Users\Fortune\source\repos\fine-controller\.editorconfig" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Include="C:\Users\Fortune\source\repos\fine-controller\.editorconfig" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="KubernetesSystem\Assets\KubeCtl\" />
 	</ItemGroup>
 
 </Project>

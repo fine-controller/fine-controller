@@ -3,70 +3,71 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Systems.BackgroundServiceSystem;
 
-namespace Systems.BackgroundServiceSystem.Impl
+namespace Systems.HostedServiceSystem.Impl
 {
-	internal class HostedServiceSystemImpl : IHostedServiceSystem
-	{
-		private readonly Dictionary<string, (IHostedService HostedService, CancellationTokenSource CancellationTokenSource, CancellationTokenSource CompositeCancellationTokenSource)> _items = new();
+    internal class HostedServiceSystemImpl : IHostedServiceSystem
+    {
+        private readonly Dictionary<string, (IHostedService HostedService, CancellationTokenSource CancellationTokenSource, CancellationTokenSource CompositeCancellationTokenSource)> _items = new();
 
-		public IEnumerable<string> List()
-		{
-			return _items.Keys;
-		}
+        public IEnumerable<string> List()
+        {
+            return _items.Keys;
+        }
 
-		public bool Exists(string name)
-		{
-			if (string.IsNullOrWhiteSpace(name))
-			{
-				throw new ArgumentNullException(nameof(name));
-			}
+        public bool Exists(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                throw new ArgumentNullException(nameof(name));
+            }
 
-			return _items.ContainsKey(name);
-		}
+            return _items.ContainsKey(name);
+        }
 
-		public async Task AddAsync(string name, IHostedService hostedService, CancellationToken cancellationToken)
-		{
-			if (string.IsNullOrWhiteSpace(name))
-			{
-				throw new ArgumentNullException(nameof(name));
-			}
+        public async Task AddAsync(string name, IHostedService hostedService, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                throw new ArgumentNullException(nameof(name));
+            }
 
-			if (hostedService is null)
-			{
-				throw new ArgumentNullException(nameof(hostedService));
-			}
+            if (hostedService is null)
+            {
+                throw new ArgumentNullException(nameof(hostedService));
+            }
 
-			if (Exists(name))
-			{
-				throw new ApplicationException($"'{name}' already exists");
-			}
+            if (Exists(name))
+            {
+                throw new ApplicationException($"'{name}' already exists");
+            }
 
-			var cancellationTokenSource = new CancellationTokenSource();
-			var compositeCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationTokenSource.Token, cancellationToken);
-			
-			_items.Add(name, (hostedService, cancellationTokenSource, compositeCancellationTokenSource));
+            var cancellationTokenSource = new CancellationTokenSource();
+            var compositeCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationTokenSource.Token, cancellationToken);
 
-			await hostedService.StartAsync(compositeCancellationTokenSource.Token);
-		}
+            _items.Add(name, (hostedService, cancellationTokenSource, compositeCancellationTokenSource));
 
-		public async Task RemoveAsync(string name)
-		{
-			if (string.IsNullOrWhiteSpace(name))
-			{
-				throw new ArgumentNullException(nameof(name));
-			}
+            await hostedService.StartAsync(compositeCancellationTokenSource.Token);
+        }
 
-			if (!_items.TryGetValue(name, out var item))
-			{
-				throw new ApplicationException($"'{name}' does not exist");
-			}
+        public async Task RemoveAsync(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                throw new ArgumentNullException(nameof(name));
+            }
 
-			item.CancellationTokenSource.Cancel();
+            if (!_items.TryGetValue(name, out var item))
+            {
+                return; // does not exist, ignore
+            }
 
-			await item.HostedService.StopAsync(item.CompositeCancellationTokenSource.Token);
+            item.CancellationTokenSource.Cancel();
 
-			_items.Remove(name);
-		}
-	}
+            await item.HostedService.StopAsync(item.CompositeCancellationTokenSource.Token);
+
+            _items.Remove(name);
+        }
+    }
 }

@@ -4,29 +4,34 @@ using Common.Utils;
 using k8s;
 using k8s.Models;
 using Microsoft.Extensions.Logging;
+using RestSharp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 using Systems.BackgroundServiceSystem;
 using Systems.KubernetesSystem.HostedServices;
 using Systems.KubernetesSystem.Models;
 using Constants = Common.Models.Constants;
+using JsonObject = System.Text.Json.Nodes.JsonObject;
 
 namespace Systems.KubernetesSystem.Impl
 {
 	internal class KubernetesSystemImpl : IKubernetesSystem
 	{
-		private const string KUBECTL_EXECUTABLE_FOLDER = "./KubernetesSystem/KubeCtl";
+		protected const string HELM_FOLDER = "./KubernetesSystem/Assets/Helm";
+		protected const string KUBE_CTL_FOLDER = "./KubernetesSystem/Assets/KubeCtl";
 
-		private readonly ILogger _logger;
-		private readonly string _kubeCtlExecutableFile;
-		private readonly KubernetesClient _kubernetesClient;
-		private readonly IHostedServiceSystem _hostedServiceSystem;
-		private readonly IServiceProvider<ServicePortForwarder> _servicePortForwarderProvider;
-		private readonly IServiceProvider<ResourceObjectEventStreamer> _resourceObjectEventStreamerProvider;
+		protected readonly ILogger _logger;
+		protected readonly string _helmExecutableFile;
+		protected readonly string _kubeCtlExecutableFile;
+		protected readonly KubernetesClient _kubernetesClient;
+		protected readonly IHostedServiceSystem _hostedServiceSystem;
+		protected readonly AppCancellationToken _appCancellationToken;
+		protected readonly IServiceProvider<ResourceObjectEventStreamer> _resourceObjectEventStreamerProvider;
 		
 		public KubernetesSystemImpl
 		(
@@ -34,27 +39,30 @@ namespace Systems.KubernetesSystem.Impl
 			ILogger<KubernetesSystemImpl> logger,
 			IHostedServiceSystem hostedServiceSystem,
 			AppCancellationToken appCancellationToken,
-			IServiceProvider<ServicePortForwarder> servicePortForwarderProvider,
 			IServiceProvider<ResourceObjectEventStreamer> resourceObjectEventStreamerProvider
 		)
 		{
 			_logger = logger ?? throw new ArgumentNullException(nameof(logger));
-			_ = appCancellationToken ?? throw new ArgumentNullException(nameof(appCancellationToken));
 			_kubernetesClient = kubernetesClient ?? throw new ArgumentNullException(nameof(kubernetesClient));
 			_hostedServiceSystem = hostedServiceSystem ?? throw new ArgumentNullException(nameof(hostedServiceSystem));
-			_servicePortForwarderProvider = servicePortForwarderProvider ?? throw new ArgumentNullException(nameof(servicePortForwarderProvider));
+			_appCancellationToken = appCancellationToken ?? throw new ArgumentNullException(nameof(appCancellationToken));
 			_resourceObjectEventStreamerProvider = resourceObjectEventStreamerProvider ?? throw new ArgumentNullException(nameof(resourceObjectEventStreamerProvider));
 
-			// Determine which kubectl executable to use
+			// client
+
+			//kubernetesClient.Client = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig());
+
+			// Determine which executables to use
+			
+			_logger.LogInformation("Operating System : Windows {OSArchitecture}", RuntimeInformation.OSArchitecture);
 
 			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
 			{
-				_logger.LogInformation("Operating System : Windows {OSArchitecture}", RuntimeInformation.OSArchitecture);
-
 				switch (RuntimeInformation.OSArchitecture)
 				{
 					case Architecture.X64:
-						_kubeCtlExecutableFile = $"{KUBECTL_EXECUTABLE_FOLDER}/windows-amd64";
+						_helmExecutableFile = $"{HELM_FOLDER}/windows-amd64";
+						_kubeCtlExecutableFile = $"{KUBE_CTL_FOLDER}/windows-amd64";
 						break;
 
 					default:
@@ -63,16 +71,16 @@ namespace Systems.KubernetesSystem.Impl
 			}
 			else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
 			{
-				_logger.LogInformation("Operating System : OSX {OSArchitecture}", RuntimeInformation.OSArchitecture);
-
 				switch (RuntimeInformation.OSArchitecture)
 				{
 					case Architecture.X64:
-						_kubeCtlExecutableFile = $"{KUBECTL_EXECUTABLE_FOLDER}/darwin-amd64";
+						_helmExecutableFile = $"{HELM_FOLDER}/darwin-amd64";
+						_kubeCtlExecutableFile = $"{KUBE_CTL_FOLDER}/darwin-amd64";
 						break;
 
 					case Architecture.Arm64:
-						_kubeCtlExecutableFile = $"{KUBECTL_EXECUTABLE_FOLDER}/darwin-arm64";
+						_helmExecutableFile = $"{HELM_FOLDER}/darwin-arm64";
+						_kubeCtlExecutableFile = $"{KUBE_CTL_FOLDER}/darwin-arm64";
 						break;
 
 					default:
@@ -81,16 +89,16 @@ namespace Systems.KubernetesSystem.Impl
 			}
 			else
 			{
-				_logger.LogInformation("Operating System : Linux {OSArchitecture}", RuntimeInformation.OSArchitecture);
-
 				switch (RuntimeInformation.OSArchitecture)
 				{
 					case Architecture.X64:
-						_kubeCtlExecutableFile = $"{KUBECTL_EXECUTABLE_FOLDER}/linux-amd64";
+						_helmExecutableFile = $"{HELM_FOLDER}/linux-amd64";
+						_kubeCtlExecutableFile = $"{KUBE_CTL_FOLDER}/linux-amd64";
 						break;
 
 					case Architecture.Arm64:
-						_kubeCtlExecutableFile = $"{KUBECTL_EXECUTABLE_FOLDER}/linux-arm64";
+						_helmExecutableFile = $"{HELM_FOLDER}/linux-arm64";
+						_kubeCtlExecutableFile = $"{KUBE_CTL_FOLDER}/linux-arm64";
 						break;
 
 					default:
@@ -102,18 +110,9 @@ namespace Systems.KubernetesSystem.Impl
 
 			if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
 			{
-				_logger.LogInformation("Chmoding {Executable}", _kubeCtlExecutableFile);
-				ProcessUtil.ExecuteAsync("chmod", $"+x {_kubeCtlExecutableFile}", appCancellationToken.Token).GetAwaiter().GetResult();
+				ProcessUtil.ExecuteAsync("chmod", new[] { "+x", _helmExecutableFile }, _appCancellationToken.Token).GetAwaiter().GetResult();
+				ProcessUtil.ExecuteAsync("chmod", new[] { "+x", _kubeCtlExecutableFile }, _appCancellationToken.Token).GetAwaiter().GetResult();
 			}
-
-			kubernetesClient.Client = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig());
-		}
-
-		public async Task<IEnumerable<V1CustomResourceDefinition>> GetKubernetesCustomResourceDefinitionsAsync(ControllerResourceObject controllerResourceObject, CancellationToken cancellationToken)
-		{
-			var labelSelector = $"{Constants.FineControllerDashCase}={controllerResourceObject.ApiGroup()}";
-			var result = await _kubernetesClient.Client.ListCustomResourceDefinitionAsync(labelSelector: labelSelector, cancellationToken: cancellationToken);
-			return result.Items.ToArray();
 		}
 
 		private string GetResourceObjectEventStreamerName(string group, string version, string namePlural)
@@ -168,56 +167,107 @@ namespace Systems.KubernetesSystem.Impl
 			await _hostedServiceSystem.RemoveAsync(streamName);
 		}
 
-		public string GetServicePortForwarderName(ControllerResourceObject controllerResourceObject)
+		public async Task<IEnumerable<V1CustomResourceDefinition>> GetKubernetesCustomResourceDefinitionsAsync(WebApiResourceObject webApiResourceObject, CancellationToken cancellationToken)
 		{
-			return $"{nameof(ServicePortForwarder)}:{controllerResourceObject.LongName}";
+			var labelSelector = $"{Constants.FineControllerApiGroup}={webApiResourceObject.ApiGroup()}";
+			var result = await _kubernetesClient.Client.ListCustomResourceDefinitionAsync(labelSelector: labelSelector, cancellationToken: cancellationToken);
+			return result.Items.ToArray();
 		}
 
-		public async Task StartWebApiPortForwardAsync(ControllerResourceObject controllerResourceObject, CancellationToken cancellationToken)
+		internal virtual async Task<string> GetWebApiUrlAsync(WebApiResourceObject webApiResourceObject, CancellationToken cancellationToken)
 		{
-			if (controllerResourceObject is null)
-			{
-				throw new ArgumentNullException(nameof(controllerResourceObject));
-			}
+			// while the implementation is boring as had to justify needing it's own method,
+			// the Kind one is interesting and sole motivation for this design choice
 
-			var servicePortForwarderName = GetServicePortForwarderName(controllerResourceObject);
-			var ports = controllerResourceObject.Spec?.Ports?.Where(x => x.Protocol?.Equals("TCP", StringComparison.OrdinalIgnoreCase) == true)?.ToList() ?? new();
+			var scheme = webApiResourceObject.FineControllerHttps ? "https" : "http";
+			var url = $"{scheme}://{webApiResourceObject.Name()}:{webApiResourceObject.FineControllerPort}";
 
-			foreach (var port in ports)
-			{
-				var servicePortForwarder = _servicePortForwarderProvider.GetRequiredService();
+			// return
 
-				servicePortForwarder.LocalPort = 8888;//TODO
-				servicePortForwarder.ServicePort = port.Port;
-				servicePortForwarder.ServiceName = controllerResourceObject.Name();
-				servicePortForwarder.KubeCtlExecutableFile = _kubeCtlExecutableFile;
-				servicePortForwarder.Namespace = controllerResourceObject.Namespace();
-				
-				await _hostedServiceSystem.AddAsync(servicePortForwarderName, servicePortForwarder, cancellationToken);
-
-				await Task.Delay(999999999);
-			}
+			return await Task.FromResult(url);
 		}
 
-		public async Task StopWebApiPortForwardAsync(ControllerResourceObject controllerResourceObject, CancellationToken cancellationToken)
+		public async Task<IEnumerable<V1CustomResourceDefinition>> GetWebApiCustomResourceDefinitionsAsync(WebApiResourceObject webApiResourceObject, CancellationToken cancellationToken)
 		{
-			if (controllerResourceObject is null)
+			if (webApiResourceObject is null)
 			{
-				throw new ArgumentNullException(nameof(controllerResourceObject));
+				throw new ArgumentNullException(nameof(webApiResourceObject));
 			}
 
-			var portForwardName = GetServicePortForwarderName(controllerResourceObject);
+			// client
 
-			await _hostedServiceSystem.RemoveAsync(portForwardName);
-		}
+			webApiResourceObject.FineControllerWebApiUrl = await GetWebApiUrlAsync(webApiResourceObject, cancellationToken);
+			var restClient = new RestClient(webApiResourceObject.FineControllerWebApiUrl);
 
-		public async Task<IEnumerable<V1CustomResourceDefinition>> GetWebApiCustomResourceDefinitionsAsync(ControllerResourceObject controllerResourceObject, CancellationToken cancellationToken)
-		{
-			return await Task.FromResult(new List<V1CustomResourceDefinition>());
+			// metadata
+
+			try
+			{
+				var metadataRequest = new RestRequest("metadata", Method.GET);
+				var metadataResponse = restClient.Execute(metadataRequest);
+
+				if (!metadataResponse.IsSuccessful)
+				{
+					throw new ApplicationException(metadataResponse.Content);
+				}
+
+				var metadata = metadataResponse.Deserialize<WebApiMetaData>();
+				webApiResourceObject.FineControllerApiGroup = metadata.Group;
+			}
+			catch (Exception exception)
+			{
+				throw new ApplicationException("Failed to get metadata from web api", exception);
+			}
+
+			// spec
+
+			var specJsonObject = default(JsonObject);
+
+			try
+			{
+				var specRequest = new RestRequest(webApiResourceObject.FineControllerSpecPath, Method.GET);
+				var specResponse = restClient.Execute(specRequest);
+
+				if (!specResponse.IsSuccessful)
+				{
+					throw new ApplicationException(specResponse.Content);
+				}
+
+				switch (webApiResourceObject.FineControllerSpecFormat)
+				{
+					case SpecFormat.Json:
+						specJsonObject = (JsonObject)JsonNode.Parse(specResponse.Content);
+						break;
+
+					case SpecFormat.Yaml:
+						specJsonObject = (JsonObject)KubernetesYaml.LoadAllFromString($"[{specResponse.Content}]").Single();
+						break;
+				}
+			}
+			catch (Exception exception)
+			{
+				throw new ApplicationException("Failed to get spec from web api", exception);
+			}
+
+			// parsing definitions
+
+			var definitions = new List<V1CustomResourceDefinition>();
+			var schemasJsonObject = (JsonObject)specJsonObject?["components"]?["schemas"];
+
+			foreach (var definitionJsonObject in schemasJsonObject.AsEnumerable().Select(x => x.Value.AsObject()))
+			{
+				var definition = new V1CustomResourceDefinition();
+			}
+
+			// return
+
+			return definitions;
 		}
 
 		public async Task DeleteCustomResourceDefinitionsAsync(IEnumerable<V1CustomResourceDefinition> customResourceDefinitions, CancellationToken cancellationToken)
 		{
+			// TODO:maybe we don't want CRD deletions or make it opt-in
+
 			var deleteOptions = customResourceDefinitions
 				.Select(x => new
 				{
@@ -238,6 +288,11 @@ namespace Systems.KubernetesSystem.Impl
 			{
 				await _kubernetesClient.Client.DeleteCollectionCustomResourceDefinitionAsync(deleteOption, cancellationToken: cancellationToken);
 			}
+		}
+
+		public Task AddOrUpdateCustomResouceDefinitionsAsync(List<V1CustomResourceDefinition> newAndUpdatedDefinitions, CancellationToken cancellationToken)
+		{
+			throw new NotImplementedException();
 		}
 	}
 }

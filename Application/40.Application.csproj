@@ -29,7 +29,11 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <None Include="C:\Users\Fortune\source\repos\finecontroller\.editorconfig" />
+	  <EditorConfigFiles Remove="C:\Users\Fortune\source\repos\fine-controller\.editorconfig" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Include="C:\Users\Fortune\source\repos\fine-controller\.editorconfig" />
 	</ItemGroup>
 
 </Project>

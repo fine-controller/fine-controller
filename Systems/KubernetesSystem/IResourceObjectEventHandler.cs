@@ -2,7 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Common.Interfaces
+namespace Systems.KubernetesSystem
 {
     public interface IResourceObjectEventHandler
     {

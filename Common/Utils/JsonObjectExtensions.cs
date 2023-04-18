@@ -59,7 +59,7 @@ namespace Common.Utils
 			return resourceObject[Constants.MetadataCamelCase]?[Constants.LabelsCamelCase]?[Constants.SpecificEventNameDashCase]?.GetValue<string>() ?? string.Empty;
 		}
 
-		public static WatchEventType GetResourceObjectSpecificEvent(this JsonObject resourceObject)
+		public static WatchEventType? GetResourceObjectSpecificEvent(this JsonObject resourceObject)
 		{
 			if (resourceObject is null)
 			{
@@ -68,7 +68,17 @@ namespace Common.Utils
 
 			var specificEventName = resourceObject.GetResourceObjectSpecificEventName();
 
-			return Enum.Parse<WatchEventType>(specificEventName);
+			if (string.IsNullOrWhiteSpace(specificEventName))
+			{
+				return default;
+			}
+
+			if (!Enum.TryParse<WatchEventType>(specificEventName, true, out var watchEventType))
+			{
+				return default;
+			}
+
+			return watchEventType;
 		}
 
 		public static string GetResourceObjectNamespace(this JsonObject resourceObject)

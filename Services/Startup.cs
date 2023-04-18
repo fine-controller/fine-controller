@@ -21,7 +21,7 @@ namespace Services
 			}
 
 			services.AddSystems(appSettings);
-			services.AddSingleton<IControllerResourceObjectService, ControllerResourceObjectServiceImpl>();
+			services.AddSingleton<IWebApiResourceObjectService, WebApiResourceObjectServiceImpl>();
 
 			return services;
 		}

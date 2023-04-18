@@ -162,7 +162,7 @@ namespace Systems.KubernetesSystem.HostedServices
 			}
 			catch (Exception exception)
 			{
-				_logger.LogWarning(exception, "Failed to dispose handle");
+				_logger.LogWarning(exception, "Failed to dispose listener");
 			}
 
 			await Task.CompletedTask;
