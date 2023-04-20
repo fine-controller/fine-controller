@@ -1,5 +1,4 @@
-﻿using Common.Interfaces;
-using Common.Models;
+﻿using Common.Models;
 using Common.Utils;
 using k8s;
 using k8s.Autorest;
@@ -18,7 +17,7 @@ using Systems.KubernetesSystem.Models;
 
 namespace Systems.KubernetesSystem.Impl
 {
-	internal class KindKubernetesSystemImpl : KubernetesSystemImpl
+    internal class KindKubernetesSystemImpl : KubernetesSystemImpl
 	{
 		private const int HTTP_PORT = 8880;
 		private const int HTTPS_PORT = 8881;
@@ -31,6 +30,7 @@ namespace Systems.KubernetesSystem.Impl
 
 		public KindKubernetesSystemImpl
 		(
+			AppSettings appSettings,
 			KubernetesClient kubernetesClient,
 			ILogger<KindKubernetesSystemImpl> logger,
 			IHostedServiceSystem hostedServiceSystem,
@@ -39,6 +39,7 @@ namespace Systems.KubernetesSystem.Impl
 		)
 		: base
 		(
+			appSettings,
 			kubernetesClient,
 			logger,
 			hostedServiceSystem,
@@ -47,6 +48,7 @@ namespace Systems.KubernetesSystem.Impl
 		)
 		{
 			_ = logger ?? throw new ArgumentNullException(nameof(logger));
+			_ = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
 			_ = kubernetesClient ?? throw new ArgumentNullException(nameof(kubernetesClient));
 			_ = hostedServiceSystem ?? throw new ArgumentNullException(nameof(hostedServiceSystem));
 			_ = appCancellationToken ?? throw new ArgumentNullException(nameof(appCancellationToken));
@@ -116,7 +118,7 @@ namespace Systems.KubernetesSystem.Impl
 			}
 			else
 			{
-				_logger.LogInformation("Creating cluster {Name}", Constants.FineControllerDomain);
+				_logger.LogInformation("Creating cluster {Name}", Constants.FineController);
 
 				CreateClusterAsync().GetAwaiter().GetResult();
 				WaitForClusterAsync().GetAwaiter().GetResult();
@@ -154,7 +156,7 @@ namespace Systems.KubernetesSystem.Impl
 		private async Task<bool> IsClusterRunningAsync()
 		{
 			var result = await ProcessUtil.ExecuteAsync(_kindExecutableFile, new[] { "get", "clusters" }, _appCancellationToken.Token);
-			return result.Trim().Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim()).Any(x => x.Equals(Constants.FineControllerDomain));
+			return result.Trim().Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim()).Any(x => x.Equals(Constants.FineController));
 		}
 
 		private async Task<bool> IsIngressNginxInstalledAsync()
@@ -174,7 +176,7 @@ namespace Systems.KubernetesSystem.Impl
 
 		private async Task CreateClusterAsync()
 		{
-			await ProcessUtil.ExecuteAsync(_kindExecutableFile, new[] { "create", "cluster", "--name", Constants.FineControllerDomain, "--config", CLUSTER_CONFIGURATION_FILE }, _appCancellationToken.Token);
+			await ProcessUtil.ExecuteAsync(_kindExecutableFile, new[] { "create", "cluster", "--name", Constants.FineController, "--config", CLUSTER_CONFIGURATION_FILE }, _appCancellationToken.Token);
 		}
 
 		private async Task InstallIngressNginxAsync()
@@ -204,7 +206,7 @@ namespace Systems.KubernetesSystem.Impl
 
 		private async Task<string> GetClusterConfigAsync()
 		{
-			return await ProcessUtil.ExecuteAsync(_kindExecutableFile, new[] { "get", "kubeconfig", "--name", Constants.FineControllerDomain }, _appCancellationToken.Token);
+			return await ProcessUtil.ExecuteAsync(_kindExecutableFile, new[] { "get", "kubeconfig", "--name", Constants.FineController }, _appCancellationToken.Token);
 		}
 
 		internal override async Task<string> GetWebApiUrlAsync(WebApiResourceObject webApiResourceObject, CancellationToken cancellationToken)
@@ -221,7 +223,7 @@ namespace Systems.KubernetesSystem.Impl
 				throw new ApplicationException($"Service does not have port '{webApiResourceObject.FineControllerPort}'");
 			}
 
-			if (portResourceObject.Protocol != "TCP")
+			if (portResourceObject.Protocol?.Equals("TCP", StringComparison.OrdinalIgnoreCase) != true)
 			{
 				throw new ApplicationException($"Service '{webApiResourceObject.FineControllerPort}' is not 'TCP' protocol");
 			}
@@ -232,11 +234,11 @@ namespace Systems.KubernetesSystem.Impl
 
 			try
 			{
-				await _kubernetesClient.Client.NetworkingV1.CreateNamespacedIngressAsync(ingressResourceObject, webApiResourceObject.Namespace(), cancellationToken: cancellationToken);
-			}
-			catch (HttpOperationException exception) when (exception.Response.StatusCode == HttpStatusCode.Conflict)
-			{
 				await _kubernetesClient.Client.NetworkingV1.ReplaceNamespacedIngressAsync(ingressResourceObject, webApiResourceObject.Name(), webApiResourceObject.Namespace(), cancellationToken: cancellationToken);
+			}
+			catch (HttpOperationException exception) when (exception.Response.StatusCode == HttpStatusCode.NotFound)
+			{
+				await _kubernetesClient.Client.NetworkingV1.CreateNamespacedIngressAsync(ingressResourceObject, webApiResourceObject.Namespace(), cancellationToken: cancellationToken);
 			}
 
 			// compose url

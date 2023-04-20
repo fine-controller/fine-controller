@@ -1,5 +1,4 @@
-﻿using Common.Interfaces;
-using Common.Models;
+﻿using Common.Models;
 using Common.Utils;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;

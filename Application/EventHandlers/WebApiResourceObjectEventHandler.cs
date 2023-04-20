@@ -44,7 +44,7 @@ namespace Application.EventHandlers
 
 			var webApiResourceObject = resourceObjectEvent.Deserialize<WebApiResourceObject>();
 
-			if (!webApiResourceObject.FineControllerEnable)
+			if (!webApiResourceObject.FineController)
 			{
 				return;
 			}

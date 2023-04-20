@@ -40,7 +40,7 @@ namespace Systems.HostedServiceSystem.Impl
 
             if (Exists(name))
             {
-                throw new ApplicationException($"'{name}' already exists");
+                return; // already exists, ignore
             }
 
             var cancellationTokenSource = new CancellationTokenSource();

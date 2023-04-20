@@ -1,22 +1,23 @@
-﻿using Common.Interfaces;
-using Common.Models;
+﻿using Common.Models;
 using Common.Utils;
 using k8s;
+using k8s.Autorest;
 using k8s.Models;
 using Microsoft.Extensions.Logging;
+using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi.Readers;
+using Newtonsoft.Json;
 using RestSharp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Runtime.InteropServices;
-using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 using Systems.BackgroundServiceSystem;
 using Systems.KubernetesSystem.HostedServices;
 using Systems.KubernetesSystem.Models;
-using Constants = Common.Models.Constants;
-using JsonObject = System.Text.Json.Nodes.JsonObject;
 
 namespace Systems.KubernetesSystem.Impl
 {
@@ -24,8 +25,10 @@ namespace Systems.KubernetesSystem.Impl
 	{
 		protected const string HELM_FOLDER = "./KubernetesSystem/Assets/Helm";
 		protected const string KUBE_CTL_FOLDER = "./KubernetesSystem/Assets/KubeCtl";
+		protected static readonly JsonSerializerSettings JSON_SERIALIZER_SETTINGS = new() { ReferenceLoopHandling = ReferenceLoopHandling.Ignore, NullValueHandling = NullValueHandling.Ignore, Formatting = Formatting.None };
 
 		protected readonly ILogger _logger;
+		protected readonly AppSettings _appSettings;
 		protected readonly string _helmExecutableFile;
 		protected readonly string _kubeCtlExecutableFile;
 		protected readonly KubernetesClient _kubernetesClient;
@@ -35,6 +38,7 @@ namespace Systems.KubernetesSystem.Impl
 		
 		public KubernetesSystemImpl
 		(
+			AppSettings appSettings,
 			KubernetesClient kubernetesClient,
 			ILogger<KubernetesSystemImpl> logger,
 			IHostedServiceSystem hostedServiceSystem,
@@ -43,6 +47,7 @@ namespace Systems.KubernetesSystem.Impl
 		)
 		{
 			_logger = logger ?? throw new ArgumentNullException(nameof(logger));
+			_appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
 			_kubernetesClient = kubernetesClient ?? throw new ArgumentNullException(nameof(kubernetesClient));
 			_hostedServiceSystem = hostedServiceSystem ?? throw new ArgumentNullException(nameof(hostedServiceSystem));
 			_appCancellationToken = appCancellationToken ?? throw new ArgumentNullException(nameof(appCancellationToken));
@@ -50,7 +55,10 @@ namespace Systems.KubernetesSystem.Impl
 
 			// client
 
-			//kubernetesClient.Client = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig());
+			if (_appSettings.IsProduction)
+			{
+				kubernetesClient.Client = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig());
+			}
 
 			// Determine which executables to use
 			
@@ -117,6 +125,16 @@ namespace Systems.KubernetesSystem.Impl
 
 		private string GetResourceObjectEventStreamerName(string group, string version, string namePlural)
 		{
+			if (string.IsNullOrWhiteSpace(version))
+			{
+				throw new ArgumentNullException(nameof(version));
+			}
+
+			if (string.IsNullOrWhiteSpace(namePlural))
+			{
+				throw new ArgumentNullException(nameof(namePlural));
+			}
+
 			return $"{nameof(ResourceObjectEventStreamer)}:{NameUtil.GetResourceObjectKindLongName(group, version, namePlural)}";
 		}
 
@@ -167,15 +185,31 @@ namespace Systems.KubernetesSystem.Impl
 			await _hostedServiceSystem.RemoveAsync(streamName);
 		}
 
-		public async Task<IEnumerable<V1CustomResourceDefinition>> GetKubernetesCustomResourceDefinitionsAsync(WebApiResourceObject webApiResourceObject, CancellationToken cancellationToken)
+		public async Task<IEnumerable<CustomResourceDefinitionResourceObject>> GetKubernetesCustomResourceDefinitionsAsync(WebApiResourceObject webApiResourceObject, CancellationToken cancellationToken)
 		{
-			var labelSelector = $"{Constants.FineControllerApiGroup}={webApiResourceObject.ApiGroup()}";
+			if (webApiResourceObject is null)
+			{
+				throw new ArgumentNullException(nameof(webApiResourceObject));
+			}
+
+			if (string.IsNullOrWhiteSpace(webApiResourceObject.FineControllerGroup))
+			{
+				throw new ArgumentException("FineControllerGroup is required", nameof(webApiResourceObject));
+			}
+
+			var labelSelector = $"{Constants.FineControllerGroup}={webApiResourceObject.FineControllerGroup}";
 			var result = await _kubernetesClient.Client.ListCustomResourceDefinitionAsync(labelSelector: labelSelector, cancellationToken: cancellationToken);
-			return result.Items.ToArray();
+			var kind = result.Kind[0 .. result.Kind.LastIndexOf("List")];
+			return result.Items.Select(CustomResourceDefinitionResourceObject.Convert).ToArray();
 		}
 
 		internal virtual async Task<string> GetWebApiUrlAsync(WebApiResourceObject webApiResourceObject, CancellationToken cancellationToken)
 		{
+			if (webApiResourceObject is null)
+			{
+				throw new ArgumentNullException(nameof(webApiResourceObject));
+			}
+
 			// while the implementation is boring as had to justify needing it's own method,
 			// the Kind one is interesting and sole motivation for this design choice
 
@@ -187,7 +221,7 @@ namespace Systems.KubernetesSystem.Impl
 			return await Task.FromResult(url);
 		}
 
-		public async Task<IEnumerable<V1CustomResourceDefinition>> GetWebApiCustomResourceDefinitionsAsync(WebApiResourceObject webApiResourceObject, CancellationToken cancellationToken)
+		public async Task<IEnumerable<CustomResourceDefinitionResourceObject>> GetWebApiCustomResourceDefinitionsAsync(WebApiResourceObject webApiResourceObject, CancellationToken cancellationToken)
 		{
 			if (webApiResourceObject is null)
 			{
@@ -212,7 +246,7 @@ namespace Systems.KubernetesSystem.Impl
 				}
 
 				var metadata = metadataResponse.Deserialize<WebApiMetaData>();
-				webApiResourceObject.FineControllerApiGroup = metadata.Group;
+				webApiResourceObject.FineControllerGroup = metadata.Group;
 			}
 			catch (Exception exception)
 			{
@@ -221,7 +255,7 @@ namespace Systems.KubernetesSystem.Impl
 
 			// spec
 
-			var specJsonObject = default(JsonObject);
+			var openApiDocument = default(OpenApiDocument);
 
 			try
 			{
@@ -233,15 +267,35 @@ namespace Systems.KubernetesSystem.Impl
 					throw new ApplicationException(specResponse.Content);
 				}
 
+				var openApiDiagnostic = default(OpenApiDiagnostic);
+				var openApiStringReader = new OpenApiStringReader();
+				
 				switch (webApiResourceObject.FineControllerSpecFormat)
 				{
 					case SpecFormat.Json:
-						specJsonObject = (JsonObject)JsonNode.Parse(specResponse.Content);
+						openApiDocument = openApiStringReader.Read(specResponse.Content, out openApiDiagnostic);
 						break;
 
 					case SpecFormat.Yaml:
-						specJsonObject = (JsonObject)KubernetesYaml.LoadAllFromString($"[{specResponse.Content}]").Single();
+						openApiDocument = openApiStringReader.Read(specResponse.Content, out openApiDiagnostic);
 						break;
+				}
+
+				_logger.LogInformation("Specification Version : {SpecificationVersion}", openApiDiagnostic.SpecificationVersion);
+				
+				foreach (var openApiWarning in openApiDiagnostic.Warnings)
+				{
+					_logger.LogWarning("{Message} : {Pointer}", openApiWarning.Message, openApiWarning.Pointer);
+				}
+
+				foreach (var openApiError in openApiDiagnostic.Errors)
+				{
+					_logger.LogError("{Message} : {Pointer}", openApiError.Message, openApiError.Pointer);
+				}
+
+				if (openApiDiagnostic.Errors.Any())
+				{
+					throw new ApplicationException("Specification has errors");
 				}
 			}
 			catch (Exception exception)
@@ -249,14 +303,88 @@ namespace Systems.KubernetesSystem.Impl
 				throw new ApplicationException("Failed to get spec from web api", exception);
 			}
 
-			// parsing definitions
+			// definitions
 
-			var definitions = new List<V1CustomResourceDefinition>();
-			var schemasJsonObject = (JsonObject)specJsonObject?["components"]?["schemas"];
+			var definitions = new List<CustomResourceDefinitionResourceObject>();
+			
+			var apiSchemas = openApiDocument.Components.Schemas
+				.Where(x => IsValidMetadataName(x.Key))
+				.ToList();
 
-			foreach (var definitionJsonObject in schemasJsonObject.AsEnumerable().Select(x => x.Value.AsObject()))
+			var apiPaths = openApiDocument.Paths
+				.SelectMany(x => x.Value.Operations.Select(o => new
+				{
+					Method = o.Key,
+					Operation = o.Value,
+					Path = x.Key.Trim().Trim('/').Split('/').Select(x => x.Trim()).ToArray(),
+				}))
+				.Where(x => x.Method == OperationType.Put || x.Method == OperationType.Delete)
+				.Where(x => x.Path.Length == 2 || x.Path.Length == 3)
+				.Select(x => new
+				{
+					Method = x.Method,
+					Operation = x.Operation,
+					Kind = x.Path[0],
+					Namespace = x.Path.Length == 3 ? x.Path[1] : "~",
+					Name = x.Path.Length == 3 ? x.Path[2] : x.Path[1] 
+				})
+				.Where(x => x.Kind.StartsWith("v", StringComparison.OrdinalIgnoreCase))
+				.Where(x => x.Name.Equals("{name}", StringComparison.OrdinalIgnoreCase))
+				.Where(x => x.Namespace.Equals("{namespace}", StringComparison.OrdinalIgnoreCase) || x.Namespace == "~")
+				.ToList();
+
+			foreach (var apiSchemaKeyAndValue in apiSchemas)
 			{
-				var definition = new V1CustomResourceDefinition();
+				var putEndpoint = apiPaths.SingleOrDefault(x => x.Method == OperationType.Put && x.Kind.Equals(apiSchemaKeyAndValue.Key, StringComparison.OrdinalIgnoreCase));
+				var deleteEndpoint = apiPaths.SingleOrDefault(x => x.Method == OperationType.Delete && x.Kind.Equals(apiSchemaKeyAndValue.Key, StringComparison.OrdinalIgnoreCase));
+
+				if (putEndpoint is null)
+				{
+					throw new ApplicationException($"PUT endpoint for schema '{apiSchemaKeyAndValue.Key}' is required");
+				}
+
+				if (deleteEndpoint is null)
+				{
+					throw new ApplicationException($"DELETE endpoint for schema '{apiSchemaKeyAndValue.Key}' is required");
+				}
+
+				if (!putEndpoint.Namespace.Equals(deleteEndpoint.Namespace, StringComparison.OrdinalIgnoreCase))
+				{
+					throw new ApplicationException($"PUT and DELETE endpoints for schema '{apiSchemaKeyAndValue.Key}' must have the same value for the namespace segment");
+				}
+
+				var kind = apiSchemaKeyAndValue.Key;
+				var definitionVersion = GetDefinitionVersionFromKind(kind);
+				var definition = new CustomResourceDefinitionResourceObject();
+				var apiSchema = new { type = "object", properties = new { spec = apiSchemaKeyAndValue.Value } };
+				var apiSchemaJson = JsonConvert.SerializeObject(apiSchema, JSON_SERIALIZER_SETTINGS);
+
+				definition.Kind = Constants.CustomResourceDefinitionPascalCase;
+				definition.ApiVersion = Constants.ApiExtensionsK8sIoV1LowerCase;
+
+				definition.EnsureMetadata();
+				definition.Metadata.EnsureLabels();
+				definition.Metadata.EnsureAnnotations();
+				definition.Metadata.Labels[Constants.FineController] = true.ToString().ToLower();
+				definition.Metadata.Name = $"{kind.ToLower()}.{webApiResourceObject.FineControllerGroup}";
+				definition.Metadata.Annotations[Constants.FineControllerHash] = HashUtil.Hash(apiSchemaJson);
+				definition.Metadata.Labels[Constants.FineControllerGroup] = webApiResourceObject.FineControllerGroup;
+
+				definition.Spec ??= new();
+
+				definition.Spec.Group = webApiResourceObject.FineControllerGroup;
+				definition.Spec.Scope = putEndpoint.Namespace == "~" ? "Cluster" : "Namespaced";
+				
+				definition.Spec.Names ??= new();
+				definition.Spec.Names.Kind = kind;
+				definition.Spec.Names.Plural = kind.ToLower();
+				definition.Spec.Names.Singular = kind.ToLower();
+				
+				definition.Spec.Versions ??= new List<V1CustomResourceDefinitionVersion>();
+				definition.Spec.Versions.Add(new() { Name = definitionVersion, Schema = new(), Served = true, Storage = true, });
+				definition.Spec.Versions[0].Schema.OpenAPIV3Schema = JsonConvert.DeserializeObject<V1JSONSchemaProps>(apiSchemaJson, JSON_SERIALIZER_SETTINGS);
+
+				definitions.Add(definition);
 			}
 
 			// return
@@ -264,35 +392,101 @@ namespace Systems.KubernetesSystem.Impl
 			return definitions;
 		}
 
-		public async Task DeleteCustomResourceDefinitionsAsync(IEnumerable<V1CustomResourceDefinition> customResourceDefinitions, CancellationToken cancellationToken)
+		private static bool IsValidMetadataName(string metadataName)
 		{
-			// TODO:maybe we don't want CRD deletions or make it opt-in
-
-			var deleteOptions = customResourceDefinitions
-				.Select(x => new
-				{
-					Kind = x.Kind,
-					ApiVersion = x.ApiVersion,
-					ApiVersionAndKind = $"{x.ApiVersion}|{x.Kind}"
-				})
-				.DistinctBy(x => x.ApiVersionAndKind)
-				.Select(x => new V1DeleteOptions
-				{
-					Kind = x.Kind,
-					OrphanDependents = false,
-					ApiVersion = x.ApiVersion,
-					PropagationPolicy = "Foreground"
-				});
-
-			foreach (var deleteOption in deleteOptions)
+			if (string.IsNullOrWhiteSpace(metadataName))
 			{
-				await _kubernetesClient.Client.DeleteCollectionCustomResourceDefinitionAsync(deleteOption, cancellationToken: cancellationToken);
+				return false; // value is required
 			}
+
+			if (metadataName.Any(x => !char.IsLetterOrDigit(x)))
+			{
+				return false; // only letters and digits are allowed
+			}
+
+			if (!metadataName.StartsWith("V"))
+			{
+				return false; // must start with capital V
+			}
+
+			metadataName = metadataName[1..]; // remove the V
+
+			var digits = new List<char>();
+
+			foreach (var character in metadataName)
+			{
+				if (char.IsDigit(character))
+				{
+					digits.Add(character);
+					continue;
+				}
+
+				// only letters at this point
+
+				if (!digits.Any())
+				{
+					return false; // a letter before any digits breaks the rule
+				}
+
+				return char.IsUpper(character); // it's a pass if the first letter is a Capital
+			}
+
+			return false;
 		}
 
-		public Task AddOrUpdateCustomResouceDefinitionsAsync(List<V1CustomResourceDefinition> newAndUpdatedDefinitions, CancellationToken cancellationToken)
+		private static string GetDefinitionVersionFromKind(string kind)
 		{
-			throw new NotImplementedException();
+			if (string.IsNullOrWhiteSpace(kind))
+			{
+				throw new ArgumentNullException(nameof(kind));
+			}
+
+			if (!kind.StartsWith("V"))
+			{
+				throw new ArgumentException("Invalid kind (must start with a capital V)", nameof(kind)); // must start with capital V
+			}
+
+			kind = kind[1..]; // remove the V
+
+			var digits = new List<char>();
+			
+			foreach (var character in kind)
+			{
+				if (char.IsDigit(character))
+				{
+					digits.Add(character);
+					continue;
+				}
+
+				return $"v{new string(digits.ToArray())}";
+			}
+
+			throw new ArgumentException("Invalid kind (must have digits before letters after V)", nameof(kind));
+		}
+
+		public async Task AddOrUpdateCustomResouceDefinitionsAsync(IEnumerable<CustomResourceDefinitionResourceObject> customResourceDefinitions, CancellationToken cancellationToken)
+		{
+			if (customResourceDefinitions is null)
+			{
+				throw new ArgumentNullException(nameof(customResourceDefinitions));
+			}
+
+            foreach (var customResourceDefinition in customResourceDefinitions)
+            {
+				var current = (await _kubernetesClient.Client.ListCustomResourceDefinitionAsync(fieldSelector: $"metadata.name={customResourceDefinition.Name()}", cancellationToken: cancellationToken)).Items.Select(CustomResourceDefinitionResourceObject.Convert).SingleOrDefault();
+
+				if (current is null)
+				{
+					await _kubernetesClient.Client.CreateCustomResourceDefinitionAsync(customResourceDefinition, cancellationToken: cancellationToken);
+					continue;
+				}
+
+				if (!current.FineControllerHash.Equals(customResourceDefinition.FineControllerHash, StringComparison.OrdinalIgnoreCase))
+				{
+					customResourceDefinition.Metadata.ResourceVersion = current.ResourceVersion(); // the only reason to fetch it first
+					await _kubernetesClient.Client.ReplaceCustomResourceDefinitionAsync(customResourceDefinition, customResourceDefinition.Name(), cancellationToken: cancellationToken);
+				}
+			}
 		}
 	}
 }

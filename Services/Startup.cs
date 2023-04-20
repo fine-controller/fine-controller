@@ -6,7 +6,7 @@ using Systems;
 
 namespace Services
 {
-	public static class Startup
+    public static class Startup
 	{
 		public static IServiceCollection AddServices(this IServiceCollection services, AppSettings appSettings)
 		{

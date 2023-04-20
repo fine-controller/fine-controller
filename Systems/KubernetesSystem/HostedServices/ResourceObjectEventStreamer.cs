@@ -1,5 +1,4 @@
-﻿using Common.Interfaces;
-using Common.Models;
+﻿using Common.Models;
 using Common.Utils;
 using k8s;
 using k8s.Autorest;
@@ -49,7 +48,7 @@ namespace Systems.KubernetesSystem.HostedServices
 				throw new ApplicationException($"{nameof(Version)} is required");
 			}
 
-			if(string.IsNullOrWhiteSpace(NamePlural))
+			if (string.IsNullOrWhiteSpace(NamePlural))
 			{
 				throw new ApplicationException($"{nameof(NamePlural)} is required");
 			}
@@ -80,20 +79,18 @@ namespace Systems.KubernetesSystem.HostedServices
 							return;
 						}
 
-						_logger.LogInformation("{LogTag} : {Message}", logTag, isReconnecting ? "Reconnecting" : "Connecting");
-
 						if (isReconnecting)
 						{
 							await Task.Delay(2000, cancellationToken);
 						}
+
+						_logger.LogInformation("{LogTag} : {Message}", logTag, "Streaming");
 
 						isReconnecting = true; // from this moment onwards it's reconnections
 
 						_listener?.Dispose();
 						_listener = new(logTag, _logger);
 						_listener.HttpOperationResponse = await _kubernetesClient.Client.CustomObjects.ListClusterCustomObjectWithHttpMessagesAsync(Group, Version, NamePlural, allowWatchBookmarks: false, watch: true, cancellationToken: cancellationToken);
-
-						_logger.LogInformation("{LogTag} : Streaming", logTag);
 
 						_listener.Watcher = _listener.HttpOperationResponse.Watch((WatchEventType eventType, object eventData) =>
 						{

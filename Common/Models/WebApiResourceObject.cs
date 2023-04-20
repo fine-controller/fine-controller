@@ -8,17 +8,17 @@ namespace Common.Models
 {
 	public class WebApiResourceObject : V1Service
 	{
-		public List<V1CustomResourceDefinition> CustomResourceDefinitions { get; } = new();
+		public List<CustomResourceDefinitionResourceObject> CustomResourceDefinitions { get; } = new();
 
 		public string FineControllerSpecPath => this.GetAnnotation(Constants.FineControllerSpecPath);
 
 		public string LongName => NameUtil.GetResourceObjectLongName(ApiVersion, Kind, Metadata?.Namespace(), Metadata?.Name);
 
-		public bool FineControllerEnable
+		public bool FineController
 		{
 			get
 			{
-				var stringValue = this.GetAnnotation(Constants.FineControllerEnable);
+				var stringValue = this.GetAnnotation(Constants.FineController);
 
 				if (string.IsNullOrWhiteSpace(stringValue))
 				{
@@ -27,7 +27,7 @@ namespace Common.Models
 
 				if (!bool.TryParse(stringValue, out var boolValue))
 				{
-					throw new ApplicationException($"Invalid {Constants.FineControllerEnable} '{stringValue}' (is not true|false)");
+					throw new ApplicationException($"Invalid {Constants.FineController} '{stringValue}' (is not true|false)");
 				}
 
 				return boolValue;
@@ -111,15 +111,15 @@ namespace Common.Models
 			}
 		}
 
-		public string FineControllerApiGroup
+		public string FineControllerGroup
 		{
 			get
 			{
-				return this.GetAnnotation(Constants.FineControllerApiGroup);
+				return this.GetAnnotation(Constants.FineControllerGroup);
 			}
 			set
 			{
-				this.SetAnnotation(Constants.FineControllerApiGroup, value);
+				this.SetAnnotation(Constants.FineControllerGroup, value);
 			}
 		}
 	}
