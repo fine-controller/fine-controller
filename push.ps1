@@ -7,7 +7,7 @@ git push
 
 # DockerHub
 
-docker build . -t fortunen/fine-controller
-docker tag fortunen/fine-controller fortunen/fine-controller
-docker push fortunen/fine-controller
-docker pushrm fortunen/fine-controller # https://github.com/christian-korneck/docker-pushrm
+docker build . -t fortunen/finecontroller
+docker tag fortunen/finecontroller fortunen/finecontroller
+docker push fortunen/finecontroller
+docker pushrm fortunen/finecontroller # https://github.com/christian-korneck/docker-pushrm
