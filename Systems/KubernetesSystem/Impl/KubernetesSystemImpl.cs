@@ -231,13 +231,14 @@ namespace Systems.KubernetesSystem.Impl
 			// client
 
 			webApiResourceObject.FineControllerWebApiUrl = await GetWebApiUrlAsync(webApiResourceObject, cancellationToken);
+
 			var restClient = new RestClient(webApiResourceObject.FineControllerWebApiUrl);
 
-			// metadata
+			// group
 
 			try
 			{
-				var metadataRequest = new RestRequest("metadata", Method.GET);
+				var metadataRequest = new RestRequest("info/group", Method.GET);
 				var metadataResponse = restClient.Execute(metadataRequest);
 
 				if (!metadataResponse.IsSuccessful)
@@ -245,8 +246,7 @@ namespace Systems.KubernetesSystem.Impl
 					throw new ApplicationException(metadataResponse.Content);
 				}
 
-				var metadata = metadataResponse.Deserialize<WebApiMetaData>();
-				webApiResourceObject.FineControllerGroup = metadata.Group;
+				webApiResourceObject.FineControllerGroup = metadataResponse.Content;
 			}
 			catch (Exception exception)
 			{
@@ -281,8 +281,11 @@ namespace Systems.KubernetesSystem.Impl
 						break;
 				}
 
-				_logger.LogInformation("Specification Version : {SpecificationVersion}", openApiDiagnostic.SpecificationVersion);
-				
+				if (openApiDiagnostic.SpecificationVersion != Microsoft.OpenApi.OpenApiSpecVersion.OpenApi3_0)
+				{
+					throw new ApplicationException("Specification is not version 3");
+				}
+
 				foreach (var openApiWarning in openApiDiagnostic.Warnings)
 				{
 					_logger.LogWarning("{Message} : {Pointer}", openApiWarning.Message, openApiWarning.Pointer);
@@ -312,35 +315,14 @@ namespace Systems.KubernetesSystem.Impl
 				.ToList();
 
 			webApiResourceObject.ApiPaths = openApiDocument.Paths
-				.SelectMany(x => x.Value.Operations.Select(o => new WebApiEndpoint
-				{
-					Path = x.Key,
-					Method = o.Key,
-					Operation = o.Value,
-					PathArray = x.Key.Trim().Trim('/').Split('/').Select(x => x.Trim()).ToArray(),
-				}))
-				.Where(x => x.Method == OperationType.Put || x.Method == OperationType.Delete)
-				.ToList();
-				
-			var customResourceDefinitionPaths = webApiResourceObject.ApiPaths
-				.Where(x => x.PathArray.Length == 2 || x.PathArray.Length == 3)
-				.Select(x => new WebApiEndpoint
-				{
-					Kind = x.PathArray[0],
-					Method = x.Method,
-					Operation = x.Operation,
-					Namespace = x.PathArray.Length == 3 ? x.PathArray[1] : "~",
-					Name = x.PathArray.Length == 3 ? x.PathArray[2] : x.PathArray[1] 
-				})
-				.Where(x => x.Kind.StartsWith("v", StringComparison.OrdinalIgnoreCase))
-				.Where(x => x.Name.Equals("{name}", StringComparison.OrdinalIgnoreCase))
-				.Where(x => x.Namespace.Equals("{namespace}", StringComparison.OrdinalIgnoreCase) || x.Namespace == "~")
+				.SelectMany(x => x.Value.Operations.Select(o => new WebApiEndpoint(x.Key, x.Value, o.Key, o.Value, webApiResourceObject.FineControllerGroup)))
+				.Where(x => x.OperationType == OperationType.Put || x.OperationType == OperationType.Delete)
 				.ToList();
 
 			foreach (var apiSchemaKeyAndValue in apiSchemas)
 			{
-				var putEndpoint = customResourceDefinitionPaths.SingleOrDefault(x => x.Method == OperationType.Put && x.Kind.Equals(apiSchemaKeyAndValue.Key, StringComparison.OrdinalIgnoreCase));
-				var deleteEndpoint = customResourceDefinitionPaths.SingleOrDefault(x => x.Method == OperationType.Delete && x.Kind.Equals(apiSchemaKeyAndValue.Key, StringComparison.OrdinalIgnoreCase));
+				var putEndpoint = webApiResourceObject.ApiPaths.SingleOrDefault(x => x.OperationType == OperationType.Put && x.KindLowerCase.Equals(apiSchemaKeyAndValue.Key, StringComparison.OrdinalIgnoreCase));
+				var deleteEndpoint = webApiResourceObject.ApiPaths.SingleOrDefault(x => x.OperationType == OperationType.Delete && x.KindLowerCase.Equals(apiSchemaKeyAndValue.Key, StringComparison.OrdinalIgnoreCase));
 
 				if (putEndpoint is null)
 				{
@@ -352,9 +334,9 @@ namespace Systems.KubernetesSystem.Impl
 					throw new ApplicationException($"DELETE endpoint for schema '{apiSchemaKeyAndValue.Key}' is required");
 				}
 
-				if (!putEndpoint.Namespace.Equals(deleteEndpoint.Namespace, StringComparison.OrdinalIgnoreCase))
+				if (!putEndpoint.NamespaceLowerCase.Equals(deleteEndpoint.NamespaceLowerCase, StringComparison.OrdinalIgnoreCase))
 				{
-					throw new ApplicationException($"PUT and DELETE endpoints for schema '{apiSchemaKeyAndValue.Key}' must have the same value for the namespace segment");
+					throw new ApplicationException($"PUT and DELETE endpoints for schema '{apiSchemaKeyAndValue.Key}' must have the same value for the namespace segment index 3");
 				}
 
 				var kind = apiSchemaKeyAndValue.Key;
@@ -377,7 +359,7 @@ namespace Systems.KubernetesSystem.Impl
 				definition.Spec ??= new();
 
 				definition.Spec.Group = webApiResourceObject.FineControllerGroup;
-				definition.Spec.Scope = putEndpoint.Namespace == "~" ? "Cluster" : "Namespaced";
+				definition.Spec.Scope = string.IsNullOrWhiteSpace(putEndpoint.NamespaceLowerCase) ? "Cluster" : "Namespaced";
 				
 				definition.Spec.Names ??= new();
 				definition.Spec.Names.Kind = kind;

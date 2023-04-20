@@ -56,12 +56,8 @@ namespace Services.Impl
 
             // diff definitions with what's already in kubernetes
 
-            var compareResult = CustomResourceDefinitionResourceObjectDiffUtil.GetDiff(existingDefinitions, incomingDefinitions);
+            var compareResult = CustomResourceDefinitionResourceObjectDiffUtil.GetDiff(existingDefinitions, webApiResourceObject.CustomResourceDefinitions);
 			
-            webApiResourceObject.CustomResourceDefinitions.AddRange(compareResult.New);
-			webApiResourceObject.CustomResourceDefinitions.AddRange(compareResult.Updated);
-			webApiResourceObject.CustomResourceDefinitions.AddRange(compareResult.Unchanged);
-
 			// update kubernetes
 
 			await _kubernetesSystem.AddOrUpdateCustomResouceDefinitionsAsync(webApiResourceObject.CustomResourceDefinitions, cancellationToken);
