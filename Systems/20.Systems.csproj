@@ -82,19 +82,15 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <EditorConfigFiles Remove="C:\Users\Fortune\source\repos\fine-controller\.editorconfig" />
+	  <EditorConfigFiles Remove="C:\Users\Fortune\source\repos\finecontroller\.editorconfig" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <None Include="C:\Users\Fortune\source\repos\fine-controller\.editorconfig" />
+	  <None Include="C:\Users\Fortune\source\repos\finecontroller\.editorconfig" />
 	</ItemGroup>
 
 	<ItemGroup>
 	  <Folder Include="KubernetesSystem\Assets\KubeCtl\" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <PackageReference Include="Microsoft.OpenApi.Readers" Version="1.6.3" />
 	</ItemGroup>
 
 </Project>

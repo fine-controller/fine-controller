@@ -3,7 +3,6 @@
 //2) maybe queue up events to be processed if the controller pod/pods happend to be down (perhaps opt-in feature if the controller-writer want's to support that)
 
 //TODO:
-//- CRD migration
 
 //Why labels and not annotations
 coz kubernetes API has label selectors

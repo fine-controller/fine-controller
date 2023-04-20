@@ -49,9 +49,9 @@ namespace Services.Impl
 
             _ = webApiResourceObject.FineControllerHttps; // just to ensure validation
 
-            // get definitions from web api and kubernetes
+            // data
 
-            var incomingDefinitions = await _kubernetesSystem.GetWebApiCustomResourceDefinitionsAsync(webApiResourceObject, cancellationToken);
+            await _kubernetesSystem.SetWebApiCustomResourceObjectDataAsync(webApiResourceObject, cancellationToken);
             var existingDefinitions = await _kubernetesSystem.GetKubernetesCustomResourceDefinitionsAsync(webApiResourceObject, cancellationToken);
 
             // diff definitions with what's already in kubernetes

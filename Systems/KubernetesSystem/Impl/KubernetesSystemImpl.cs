@@ -221,7 +221,7 @@ namespace Systems.KubernetesSystem.Impl
 			return await Task.FromResult(url);
 		}
 
-		public async Task<IEnumerable<CustomResourceDefinitionResourceObject>> GetWebApiCustomResourceDefinitionsAsync(WebApiResourceObject webApiResourceObject, CancellationToken cancellationToken)
+		public async Task SetWebApiCustomResourceObjectDataAsync(WebApiResourceObject webApiResourceObject, CancellationToken cancellationToken)
 		{
 			if (webApiResourceObject is null)
 			{
@@ -306,27 +306,31 @@ namespace Systems.KubernetesSystem.Impl
 			// definitions
 
 			var definitions = new List<CustomResourceDefinitionResourceObject>();
-			
+
 			var apiSchemas = openApiDocument.Components.Schemas
 				.Where(x => IsValidMetadataName(x.Key))
 				.ToList();
 
-			var apiPaths = openApiDocument.Paths
-				.SelectMany(x => x.Value.Operations.Select(o => new
+			webApiResourceObject.ApiPaths = openApiDocument.Paths
+				.SelectMany(x => x.Value.Operations.Select(o => new WebApiEndpoint
 				{
+					Path = x.Key,
 					Method = o.Key,
 					Operation = o.Value,
-					Path = x.Key.Trim().Trim('/').Split('/').Select(x => x.Trim()).ToArray(),
+					PathArray = x.Key.Trim().Trim('/').Split('/').Select(x => x.Trim()).ToArray(),
 				}))
 				.Where(x => x.Method == OperationType.Put || x.Method == OperationType.Delete)
-				.Where(x => x.Path.Length == 2 || x.Path.Length == 3)
-				.Select(x => new
+				.ToList();
+				
+			var customResourceDefinitionPaths = webApiResourceObject.ApiPaths
+				.Where(x => x.PathArray.Length == 2 || x.PathArray.Length == 3)
+				.Select(x => new WebApiEndpoint
 				{
+					Kind = x.PathArray[0],
 					Method = x.Method,
 					Operation = x.Operation,
-					Kind = x.Path[0],
-					Namespace = x.Path.Length == 3 ? x.Path[1] : "~",
-					Name = x.Path.Length == 3 ? x.Path[2] : x.Path[1] 
+					Namespace = x.PathArray.Length == 3 ? x.PathArray[1] : "~",
+					Name = x.PathArray.Length == 3 ? x.PathArray[2] : x.PathArray[1] 
 				})
 				.Where(x => x.Kind.StartsWith("v", StringComparison.OrdinalIgnoreCase))
 				.Where(x => x.Name.Equals("{name}", StringComparison.OrdinalIgnoreCase))
@@ -335,8 +339,8 @@ namespace Systems.KubernetesSystem.Impl
 
 			foreach (var apiSchemaKeyAndValue in apiSchemas)
 			{
-				var putEndpoint = apiPaths.SingleOrDefault(x => x.Method == OperationType.Put && x.Kind.Equals(apiSchemaKeyAndValue.Key, StringComparison.OrdinalIgnoreCase));
-				var deleteEndpoint = apiPaths.SingleOrDefault(x => x.Method == OperationType.Delete && x.Kind.Equals(apiSchemaKeyAndValue.Key, StringComparison.OrdinalIgnoreCase));
+				var putEndpoint = customResourceDefinitionPaths.SingleOrDefault(x => x.Method == OperationType.Put && x.Kind.Equals(apiSchemaKeyAndValue.Key, StringComparison.OrdinalIgnoreCase));
+				var deleteEndpoint = customResourceDefinitionPaths.SingleOrDefault(x => x.Method == OperationType.Delete && x.Kind.Equals(apiSchemaKeyAndValue.Key, StringComparison.OrdinalIgnoreCase));
 
 				if (putEndpoint is null)
 				{
@@ -387,9 +391,7 @@ namespace Systems.KubernetesSystem.Impl
 				definitions.Add(definition);
 			}
 
-			// return
-
-			return definitions;
+			webApiResourceObject.CustomResourceDefinitions = definitions;
 		}
 
 		private static bool IsValidMetadataName(string metadataName)

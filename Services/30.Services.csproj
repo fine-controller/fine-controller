@@ -18,7 +18,6 @@
 
 	<ItemGroup>
 	  <ProjectReference Include="..\Systems\20.Systems.csproj" />
-	  <ProjectReference Include="..\Systems\20.Systems.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -26,11 +25,11 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <EditorConfigFiles Remove="C:\Users\Fortune\source\repos\fine-controller\.editorconfig" />
+	  <EditorConfigFiles Remove="C:\Users\Fortune\source\repos\finecontroller\.editorconfig" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <None Include="C:\Users\Fortune\source\repos\fine-controller\.editorconfig" />
+	  <None Include="C:\Users\Fortune\source\repos\finecontroller\.editorconfig" />
 	</ItemGroup>
 
 </Project>

@@ -8,11 +8,21 @@ namespace Common.Models
 {
 	public class WebApiResourceObject : V1Service
 	{
-		public List<CustomResourceDefinitionResourceObject> CustomResourceDefinitions { get; } = new();
+		public string FineControllerGroup { get; set; }
 
-		public string FineControllerSpecPath => this.GetAnnotation(Constants.FineControllerSpecPath);
+		public string FineControllerWebApiUrl { get; set; }
 
-		public string LongName => NameUtil.GetResourceObjectLongName(ApiVersion, Kind, Metadata?.Namespace(), Metadata?.Name);
+		public IEnumerable<WebApiEndpoint> ApiPaths { get; set; } = Array.Empty<WebApiEndpoint>();
+
+		public IEnumerable<CustomResourceDefinitionResourceObject> CustomResourceDefinitions { get; set; } = Array.Empty<CustomResourceDefinitionResourceObject>();
+
+		public string LongName
+		{
+			get
+			{
+				return NameUtil.GetResourceObjectLongName(ApiVersion, Kind, Metadata?.Namespace(), Metadata?.Name);
+			}
+		}
 
 		public bool FineController
 		{
@@ -79,6 +89,15 @@ namespace Common.Models
 			}
 		}
 
+
+		public string FineControllerSpecPath
+		{
+			get
+			{
+				return this.GetAnnotation(Constants.FineControllerSpecPath);
+			}
+		}
+
 		public SpecFormat? FineControllerSpecFormat
 		{
 			get
@@ -96,30 +115,6 @@ namespace Common.Models
 				}
 
 				return enumValue;
-			}
-		}
-
-		public string FineControllerWebApiUrl
-		{
-			get
-			{
-				return this.GetAnnotation(Constants.FineControllerWebApiUrl);
-			}
-			set
-			{
-				this.SetAnnotation(Constants.FineControllerWebApiUrl, value);
-			}
-		}
-
-		public string FineControllerGroup
-		{
-			get
-			{
-				return this.GetAnnotation(Constants.FineControllerGroup);
-			}
-			set
-			{
-				this.SetAnnotation(Constants.FineControllerGroup, value);
 			}
 		}
 	}
