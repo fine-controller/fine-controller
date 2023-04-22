@@ -8,10 +8,12 @@
 		public const string KindCamelCase = "kind";
 		public const string LabelsCamelCase = "labels";
 		public const string ServicePascalCase = "Service";
+		public const string ClusterPascalCase = "Cluster";
 		public const string MetadataCamelCase = "metadata";
 		public const string ServicesCamelCase = "services";
 		public const string NamespaceCamelCase = "namespace";
 		public const string ApiVersionCamelCase = "apiVersion";
+		public const string NamespacedPascalCase = "Namespaced";
 		public const string FineController = "finecontroller.github.io";
 		public const string FineControllerPort = $"{FineController}/port";
 		public const string FineControllerHash = $"{FineController}/hash";

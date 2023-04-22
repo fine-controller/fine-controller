@@ -371,7 +371,7 @@ namespace Systems.KubernetesSystem.Impl
 				definition.Spec ??= new();
 
 				definition.Spec.Group = webApiResourceObject.FineControllerGroup;
-				definition.Spec.Scope = string.IsNullOrWhiteSpace(putEndpoint.NamespaceLowerCase) ? "Cluster" : "Namespaced";
+				definition.Spec.Scope = string.IsNullOrWhiteSpace(putEndpoint.NamespaceLowerCase) ? Constants.ClusterPascalCase : Constants.NamespacedPascalCase;
 				
 				definition.Spec.Names ??= new();
 				definition.Spec.Names.Kind = kind;
@@ -402,16 +402,7 @@ namespace Systems.KubernetesSystem.Impl
 
 				if (current is null)
 				{
-					try
-					{
-						await _kubernetesClient.Client.CreateCustomResourceDefinitionAsync(customResourceDefinition, cancellationToken: cancellationToken);
-					}
-					catch (Exception exception)
-					{
-						exception.ToString();
-						throw;
-					}
-
+					await _kubernetesClient.Client.CreateCustomResourceDefinitionAsync(customResourceDefinition, cancellationToken: cancellationToken);
 					continue;
 				}
 
@@ -420,7 +411,7 @@ namespace Systems.KubernetesSystem.Impl
 					continue;
 				}
 
-				customResourceDefinition.Metadata.ResourceVersion = current.ResourceVersion(); // the only reason to fetch it first
+				customResourceDefinition.Metadata.ResourceVersion = current.ResourceVersion();
 				await _kubernetesClient.Client.ReplaceCustomResourceDefinitionAsync(customResourceDefinition, customResourceDefinition.Name(), cancellationToken: cancellationToken);
 			}
 		}

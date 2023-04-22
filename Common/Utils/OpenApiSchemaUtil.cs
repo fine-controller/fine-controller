@@ -1,8 +1,11 @@
 ﻿using k8s.Models;
+using Microsoft.OpenApi.Any;
+using Microsoft.OpenApi.Extensions;
 using Microsoft.OpenApi.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace Common.Utils
 {
@@ -55,7 +58,7 @@ namespace Common.Utils
 			k.AllOf = api.AllOf?.Select(x => Convert(x)).ToList();
 			k.AnyOf = api.AnyOf?.Select(x => Convert(x)).ToList();
 			k.OneOf = api.OneOf?.Select(x => Convert(x)).ToList();
-			//k.EnumProperty = api.Enum?.Select(x => x)?.ToList();
+			k.EnumProperty = api.Enum?.Select(x => Convert(x))?.ToList();
 			//k.XKubernetesIntOrString = api.XKubernetesIntOrString;
 			//k.XKubernetesListMapKeys = api.XKubernetesListMapKeys;
 			//k.XKubernetesValidations = api.XKubernetesValidations;
@@ -110,6 +113,23 @@ namespace Common.Utils
 			}
 
 			return System.Convert.ToDouble(value);
+		}
+
+		public static object Convert(IOpenApiAny value)
+		{
+			if (value is null)
+			{
+				return default;
+			}
+
+			switch (value.AnyType)
+			{
+				case AnyType.Array: break;
+				case AnyType.Object: break;
+				case AnyType.Primitive: return value.GetType().GetProperty("Value")?.GetValue(value);
+			}
+
+			return default;
 		}
 	}
 }
