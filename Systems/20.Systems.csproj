@@ -25,28 +25,13 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <None Update="KubernetesSystem\Assets\Helm\darwin-amd64">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </None>
-	  <None Update="KubernetesSystem\Assets\Helm\darwin-arm64">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </None>
-	  <None Update="KubernetesSystem\Assets\Helm\linux-amd64">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </None>
-	  <None Update="KubernetesSystem\Assets\Helm\linux-arm64">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </None>
-	  <None Update="KubernetesSystem\Assets\Helm\windows-amd64">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </None>
 	  <None Update="KubernetesSystem\Assets\Kind\darwin-amd64">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>
 	  <None Update="KubernetesSystem\Assets\Kind\darwin-arm64">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>
-	  <None Update="KubernetesSystem\Assets\Kind\ingress-template.yaml">
+	  <None Update="KubernetesSystem\Assets\Kind\example.yaml">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>
 	  <None Update="KubernetesSystem\Assets\Kind\linux-amd64">

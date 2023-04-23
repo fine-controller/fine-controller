@@ -7,5 +7,6 @@ namespace Services
 	public interface IResourceObjectEventEventService
 	{
 		public Task AddOrUpdateAsync(ResourceObject resourceObjectEvent, CancellationToken cancellationToken);
+		public Task DeleteAsync(ResourceObject resourceObject, CancellationToken cancellationToken);
 	}
 }

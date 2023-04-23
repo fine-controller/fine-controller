@@ -5,7 +5,13 @@
 			"commandName": "Project",
 			"dotnetRunMessages": true,
 			"environmentVariables": {
-				"DOTNET_ENVIRONMENT": "Development"
+				"DOTNET_ENVIRONMENT": "Development",
+				"API_HOST": "localhost",
+				"API_PORT": "8880",
+				"API_HTTPS": "false",
+				"API_SPEC_PATH": "swagger/v1/swagger.json",
+				"API_SPEC_FORMAT": "json",
+				"API_GROUP": "example.io"
 			}
 		}
 	}

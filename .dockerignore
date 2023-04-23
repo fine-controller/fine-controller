@@ -21,10 +21,6 @@
 **/obj
 **/secrets.dev.yaml
 **/values.dev.yaml
-**/darwin-amd64
-**/darwin-arm64
-**/windows-amd64
-**/windows-arm64
-**/linux-arm64
+**/KubernetesSystem/Assets
 LICENSE
 README.md

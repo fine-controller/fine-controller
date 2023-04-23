@@ -3,11 +3,15 @@ using Common.Utils;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Services;
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
+using Systems.ApiSystem;
 using Systems.KubernetesSystem;
 
 // vars
@@ -16,7 +20,7 @@ var assembly = Assembly.GetExecutingAssembly();
 var builder = Host.CreateApplicationBuilder(args);
 var appCancellationToken = new AppCancellationToken();
 var appSettings = builder.Configuration.Get<AppSettings>();
-var eventProcessorType = typeof(IResourceObjectEventHandler);
+var resourceObjectEventHandlerType = typeof(IResourceObjectEventHandler);
 
 // initialize app settings
 
@@ -31,19 +35,41 @@ builder.Services.AddSingleton(appCancellationToken);
 
 assembly
 	.GetTypes()
-	.Where(type => eventProcessorType.IsAssignableFrom(type) && !type.IsInterface)
-	.ToList().ForEach(type => builder.Services.AddSingleton(eventProcessorType, type));
+	.Where(type => resourceObjectEventHandlerType.IsAssignableFrom(type) && !type.IsInterface)
+	.ToList().ForEach(type => builder.Services.AddSingleton(resourceObjectEventHandlerType, type));
 
 // initialize app
 
 var app = builder.Build();
+var appData = app.Services.GetRequiredService<AppData>();
+var apiSystem = app.Services.GetRequiredService<IApiSystem>();
+var logger = app.Services.GetRequiredService<ILogger<Program>>();
+var kubernetesSystem = app.Services.GetRequiredService<IKubernetesSystem>();
 var appLifetime = app.Services.GetRequiredService<IHostApplicationLifetime>();
 
-appLifetime.ApplicationStarted.Register(() =>
+while (!await apiSystem.IsRunningAsync(appCancellationToken.Token))
 {
-	app.Services
-		.GetRequiredService<IKubernetesSystem>()
-		.StartStreamingResourceObjectEventsAsync(string.Empty, Constants.V1CamelCase, Constants.ServicesCamelCase, appCancellationToken.Token);
+	logger.LogInformation("Waiting for API to start");
+	await Task.Delay(1000);
+}
+
+appLifetime.ApplicationStarted.Register(async () =>
+{
+	try
+	{
+		await apiSystem.LoadSpecAsync(appCancellationToken.Token);
+		await kubernetesSystem.AddOrUpdateCustomResouceDefinitionsAsync(appData.CustomResourceDefinitions, appCancellationToken.Token);
+
+		foreach (var definition in appData.CustomResourceDefinitions)
+		{
+			await kubernetesSystem.StartStreamingResourceObjectEventsAsync(definition.Spec.Group, definition.Spec.Versions[0].Name, definition.Spec.Names.Plural, appCancellationToken.Token);
+		}
+	}
+	catch (Exception exception)
+	{
+		logger.LogError(exception, "Failed to start");
+		Environment.Exit(1);
+	}
 });
 
 appLifetime.ApplicationStopping.Register(() =>

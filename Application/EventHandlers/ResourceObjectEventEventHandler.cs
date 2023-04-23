@@ -1,4 +1,5 @@
 ﻿using Common.Models;
+using k8s;
 using Services;
 using System;
 using System.Threading;
@@ -26,6 +27,14 @@ namespace Application.EventHandlers
 			if (resourceObject is null)
 			{
 				throw new ArgumentNullException(nameof(resourceObject));
+			}
+
+			// delete
+
+			if (resourceObject.EventType == WatchEventType.Deleted)
+			{
+				await _resourceObjectEventEventService.DeleteAsync(resourceObject, cancellationToken);
+				return;
 			}
 
 			// add
