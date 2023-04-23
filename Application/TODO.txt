@@ -1,8 +1,0 @@
-﻿//TODO: Some permant storage will be required to
-//1) establish which controllers(tagged services) have since been removed while we were down so we can clean up their CRDs and CRD instances (perhaps opt-in feature if the controller-writer want's to support that)
-//2) maybe queue up events to be processed if the controller pod/pods happend to be down (perhaps opt-in feature if the controller-writer want's to support that)
-
-//TODO:
-
-//Why labels and not annotations
-coz kubernetes API has label selectors

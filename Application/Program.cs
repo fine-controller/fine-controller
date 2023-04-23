@@ -26,6 +26,9 @@ var resourceObjectEventHandlerType = typeof(IResourceObjectEventHandler);
 
 appSettings.IsProduction = builder.Environment.IsProduction();
 appSettings.RootPath = Path.GetDirectoryName(assembly.Location);
+appSettings.API_HOST = appSettings.API_HOST?.Trim('"', '\'', ' ')?.Trim();
+appSettings.API_GROUP = appSettings.API_GROUP?.Trim('"', '\'', ' ')?.Trim();
+appSettings.API_SPEC_PATH = appSettings.API_SPEC_PATH?.Trim('"', '\'', ' ', '/')?.Trim();
 Validator.ValidateObject(appSettings, new ValidationContext(appSettings), true);
 
 // initialize services
@@ -49,7 +52,7 @@ var appLifetime = app.Services.GetRequiredService<IHostApplicationLifetime>();
 
 while (!await apiSystem.IsRunningAsync(appCancellationToken.Token))
 {
-	logger.LogInformation("Waiting for API to start");
+	logger.LogInformation($"Waiting for API to start : {apiSystem.GetBaseUrl()}");
 	await Task.Delay(1000);
 }
 

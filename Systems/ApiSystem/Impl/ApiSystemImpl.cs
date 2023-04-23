@@ -21,6 +21,7 @@ namespace Systems.ApiSystem.Impl
 		protected static readonly JsonSerializerSettings JSON_SERIALIZER_SETTINGS = new() { ReferenceLoopHandling = ReferenceLoopHandling.Ignore, NullValueHandling = NullValueHandling.Ignore, Formatting = Formatting.None };
 
 		private readonly ILogger _logger;
+		private readonly string _baseUrl;
 		private readonly AppData _appData;
 		private readonly RestClient _restClient;
 		private readonly AppSettings _appSettings;
@@ -40,14 +41,19 @@ namespace Systems.ApiSystem.Impl
 			_kubernetesSystem = kubernetesSystem ?? throw new ArgumentNullException(nameof(kubernetesSystem));
 
 			var scheme = _appSettings.API_HTTPS.Value ? "https" : "http";
-			var baseUrl = $"{scheme}://{_appSettings.API_HOST}:{_appSettings.API_PORT}";
+			_baseUrl = $"{scheme}://{_appSettings.API_HOST}:{_appSettings.API_PORT}";
 
 			if (!_appSettings.IsProduction)
 			{
-				baseUrl += "/example"; 
+				_baseUrl += "/example"; 
 			}
 
-			_restClient = new RestClient(baseUrl);
+			_restClient = new RestClient(_baseUrl);
+		}
+
+		public string GetBaseUrl()
+		{
+			return _baseUrl;
 		}
 
 		public async Task<bool> IsRunningAsync(CancellationToken cancellationToken)
