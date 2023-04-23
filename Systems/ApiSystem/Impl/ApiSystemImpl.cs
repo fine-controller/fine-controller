@@ -176,7 +176,7 @@ namespace Systems.ApiSystem.Impl
 					}
 					else
 					{
-						_logger.LogWarning("Unknown resource kind '{Kind}'", $"{putEndpoint.GroupLowerCase}/{putEndpoint.VersionLowerCase}/{putEndpoint.KindLowerCase}");
+						_logger.LogWarning("Unknown resource kind '{Kind}'", $"{putEndpoint.GroupLowerCase ?? "-"}/{putEndpoint.VersionLowerCase}/{putEndpoint.KindLowerCase}");
 					}
 
 					continue;
