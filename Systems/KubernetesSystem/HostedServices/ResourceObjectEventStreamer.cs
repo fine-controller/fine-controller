@@ -6,6 +6,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading;
@@ -90,7 +91,19 @@ namespace Systems.KubernetesSystem.HostedServices
 
 						_listener?.Dispose();
 						_listener = new(logTag, _logger);
-						_listener.HttpOperationResponse = await _kubernetesClient.Client.CustomObjects.ListClusterCustomObjectWithHttpMessagesAsync(Group, Version, NamePlural, allowWatchBookmarks: false, watch: true, cancellationToken: cancellationToken);
+
+						try
+						{
+							_listener.HttpOperationResponse = await _kubernetesClient.Client.CustomObjects.ListClusterCustomObjectWithHttpMessagesAsync(Group, Version, NamePlural, allowWatchBookmarks: false, watch: true, cancellationToken: cancellationToken);
+						}
+						catch (HttpOperationException exception)
+						{
+							if (exception.Response.StatusCode == HttpStatusCode.Forbidden)
+							{
+								_logger.LogWarning("Streaming for {LogTag} was forbidden : check RBAC for {FineController} container", logTag, Constants.FineController);
+								throw;
+							}
+						}
 
 						_listener.Watcher = _listener.HttpOperationResponse.Watch((WatchEventType eventType, object eventData) =>
 						{
