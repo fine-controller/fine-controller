@@ -21,6 +21,7 @@ namespace Services
 			}
 
 			services.AddSystems(appSettings);
+			services.AddSingleton<IResourceObjectEventEventService, ResourceObjectEventEventServiceImpl>();
 			services.AddSingleton<IWebApiResourceObjectService, WebApiResourceObjectServiceImpl>();
 
 			return services;

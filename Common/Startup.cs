@@ -19,6 +19,7 @@ namespace Common
 				throw new ArgumentNullException(nameof(appSettings));
 			}
 
+			services.AddSingleton<AppData>();
 			services.AddSingleton(appSettings);
 			services.AddSingleton(typeof(IServiceProvider<>), typeof(ServiceProvider<>));
 

@@ -9,10 +9,22 @@ namespace Common.Models
 	{
 		protected static readonly JsonSerializerSettings JSON_SERIALIZER_SETTINGS = new() { ReferenceLoopHandling = ReferenceLoopHandling.Ignore, NullValueHandling = NullValueHandling.Ignore, Formatting = Formatting.None };
 
-		public bool IsNamespaced => Spec?.Scope?.Equals("Namespaced", StringComparison.OrdinalIgnoreCase) == true;
+		public bool IsNamespaced
+		{
+			get
+			{
+				return Spec?.Scope?.Equals("Namespaced", StringComparison.OrdinalIgnoreCase) == true;
+			}
+		}
 
-		public string LongName => NameUtil.GetResourceObjectLongName(ApiVersion, Kind, this.Namespace(), this.Name());
-		
+		public string LongName
+		{
+			get
+			{
+				return NameUtil.GetLongName(this.ApiGroup(), this.ApiGroupVersion(), Kind, this.Namespace(), this.Name());
+			}
+		}
+
 		public bool FineController
 		{
 			get

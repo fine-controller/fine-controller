@@ -65,7 +65,7 @@ namespace Systems.KubernetesSystem.HostedServices
                 MaxDegreeOfParallelism = _appSettings.IsProduction ? default : 1,
 			};
 
-			var logTag = $"{NameUtil.GetResourceObjectKindLongName(Group, Version, NamePlural)} Events";
+			var logTag = $"{NameUtil.GetKindLongName(Group, Version, NamePlural)} Events";
 
 			void connect()
 			{
@@ -102,28 +102,21 @@ namespace Systems.KubernetesSystem.HostedServices
 								return;
 							}
 
-							var eventDataJsonElement = (JsonElement)eventData;
-							var resourceObjectEvent = eventDataJsonElement.Deserialize<JsonObject>();
+							var resourceObject = new ResourceObject(((JsonElement)eventData).Deserialize<JsonObject>(), eventType);
 
-							resourceObjectEvent.SetResourceObjectSpecificEventName(eventType.ToString());
-
-							Parallel.ForEach(_resourceObjectEventHandlers, parallelOptions, resourceObjectEventHandler =>
+							Parallel.ForEach(_resourceObjectEventHandlers, parallelOptions, async resourceObjectEventHandler =>
 							{
-								Task.Run(async () =>
+								try
 								{
-									try
-									{
-										await resourceObjectEventHandler.HandleAsync(resourceObjectEvent, cancellationToken);
-									}
-									catch (Exception exception)
-									{
-										var handlerName = resourceObjectEventHandler.GetType().Name;
-										var resourceObjectLongName = resourceObjectEvent.GetResourceObjectLongName();
-										var specificEventName = resourceObjectEvent.GetResourceObjectSpecificEventName();
-
-										_logger.LogError(exception, "Failed to process event | Handler : {HandlerName} | ResourceObject : {ResourceObjectLongName} | SpecificEvent : {SpecificEvent}", handlerName, resourceObjectLongName, specificEventName);
-									}
-								});
+									await resourceObjectEventHandler.HandleAsync(resourceObject, cancellationToken);
+								}
+								catch (Exception exception)
+								{
+									var resourceObjectLongName = resourceObject.LongName;
+									var handlerName = resourceObjectEventHandler.GetType().Name;
+									
+									_logger.LogError(exception, "Failed to process event | Handler : {HandlerName} | ResourceObject : {ResourceObjectLongName} | EventType : {EventType}", handlerName, resourceObjectLongName, eventType);
+								}
 							});
 						},
 						onError: exception =>

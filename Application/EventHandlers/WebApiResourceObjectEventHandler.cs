@@ -4,7 +4,6 @@ using k8s;
 using Services;
 using System;
 using System.Text.Json;
-using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 using Systems.KubernetesSystem;
@@ -23,26 +22,26 @@ namespace Application.EventHandlers
 			_webApiResourceObjectService = webApiResourceObjectService ?? throw new ArgumentNullException(nameof(webApiResourceObjectService));
 		}
 
-		public async Task HandleAsync(JsonObject resourceObjectEvent, CancellationToken cancellationToken)
+		public async Task HandleAsync(ResourceObject resourceObject, CancellationToken cancellationToken)
 		{
 			// filter
 
-			if (resourceObjectEvent is null)
+			if (resourceObject is null)
 			{
-				throw new ArgumentNullException(nameof(resourceObjectEvent));
+				throw new ArgumentNullException(nameof(resourceObject));
 			}
 
-			if (!resourceObjectEvent.GetResourceObjectApiVersion().Equals(Constants.V1CamelCase, StringComparison.OrdinalIgnoreCase))
-			{
-				return;
-			}
-
-			if (!resourceObjectEvent.GetResourceObjectKind().Equals(Constants.ServicePascalCase, StringComparison.OrdinalIgnoreCase))
+			if (!resourceObject.ApiVersion.Equals(Constants.V1CamelCase, StringComparison.OrdinalIgnoreCase))
 			{
 				return;
 			}
 
-			var webApiResourceObject = resourceObjectEvent.Deserialize<WebApiResourceObject>();
+			if (!resourceObject.Kind.Equals(Constants.ServicePascalCase, StringComparison.OrdinalIgnoreCase))
+			{
+				return;
+			}
+
+			var webApiResourceObject = resourceObject.Data.Deserialize<WebApiResourceObject>();
 
 			if (!webApiResourceObject.FineController)
 			{
@@ -51,7 +50,7 @@ namespace Application.EventHandlers
 
 			// delete
 
-			if (resourceObjectEvent.GetResourceObjectSpecificEvent() == WatchEventType.Deleted)
+			if (resourceObject.EventType == WatchEventType.Deleted)
 			{
 				await _webApiResourceObjectService.DeleteAsync(webApiResourceObject, cancellationToken);
 				return;

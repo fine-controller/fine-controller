@@ -1,6 +1,6 @@
 ﻿using Common.Utils;
+using k8s;
 using k8s.Models;
-using Microsoft.OpenApi.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,7 +21,7 @@ namespace Common.Models
 		{
 			get
 			{
-				return NameUtil.GetResourceObjectLongName(ApiVersion, Kind, Metadata?.Namespace(), Metadata?.Name);
+				return NameUtil.GetLongName(this.ApiGroup(), this.ApiGroupVersion(), Kind, this.Namespace(), this.Name());
 			}
 		}
 
@@ -117,6 +117,27 @@ namespace Common.Models
 
 				return enumValue;
 			}
+		}
+
+		public WatchEventType EventType
+		{
+			get
+			{
+				var value = this.GetLabel(Constants.EventTypeDashCase);
+
+				if (string.IsNullOrWhiteSpace(value))
+				{
+					return default;
+				}
+
+				return Enum.Parse<WatchEventType>(value);
+			}
+		}
+
+		public bool ResourceVersionIsLaterThan(string resourceVersion)
+		{
+			int compareResult = string.Compare(this.ResourceVersion(), resourceVersion);
+			return compareResult > 0;
 		}
 	}
 }

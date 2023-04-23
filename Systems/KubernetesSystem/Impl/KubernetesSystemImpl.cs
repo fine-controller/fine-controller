@@ -135,7 +135,7 @@ namespace Systems.KubernetesSystem.Impl
 				throw new ArgumentNullException(nameof(namePlural));
 			}
 
-			return $"{nameof(ResourceObjectEventStreamer)}:{NameUtil.GetResourceObjectKindLongName(group, version, namePlural)}";
+			return $"{nameof(ResourceObjectEventStreamer)}:{NameUtil.GetKindLongName(group, version, namePlural)}";
 		}
 
 		public async Task StartStreamingResourceObjectEventsAsync(string group, string version, string namePlural, CancellationToken cancellationToken)

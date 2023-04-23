@@ -1,6 +1,6 @@
 ﻿using Common.Models;
 using Common.Utils;
-using k8s.Models;
+using k8s;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,15 +10,18 @@ namespace Services.Impl
 {
 	internal class WebApiResourceObjectServiceImpl : IWebApiResourceObjectService
     {
-        private readonly IKubernetesSystem _kubernetesSystem;
-
-        public WebApiResourceObjectServiceImpl
+		private readonly AppData _appData;
+		private readonly IKubernetesSystem _kubernetesSystem;
+		
+		public WebApiResourceObjectServiceImpl
         (
-            IKubernetesSystem kubernetesSystem
-        )
+			AppData appData,
+			IKubernetesSystem kubernetesSystem
+		)
         {
-            _kubernetesSystem = kubernetesSystem ?? throw new ArgumentNullException(nameof(kubernetesSystem));
-        }
+			_appData = appData ?? throw new ArgumentNullException(nameof(appData));
+			_kubernetesSystem = kubernetesSystem ?? throw new ArgumentNullException(nameof(kubernetesSystem));
+		}
 
         public async Task AddOrUpdateAsync(WebApiResourceObject webApiResourceObject, CancellationToken cancellationToken)
         {
@@ -73,6 +76,15 @@ namespace Services.Impl
 			{
 				await _kubernetesSystem.StopStreamingResourceObjectEventsAsync(definition.Spec.Group, definition.Spec.Versions[0].Name, definition.Spec.Names.Plural, cancellationToken);
 			}
+
+            // add/update
+
+			_appData.WebApiResourceObjects[webApiResourceObject.LongName] = webApiResourceObject;
+
+            if (webApiResourceObject.EventType == WatchEventType.Added)
+            {
+
+            }
 		}
 
         public async Task DeleteAsync(WebApiResourceObject webApiResourceObject, CancellationToken cancellationToken)
@@ -90,6 +102,10 @@ namespace Services.Impl
 			{
 				await _kubernetesSystem.StopStreamingResourceObjectEventsAsync(definition.Spec.Group, definition.Spec.Versions[0].Name, definition.Spec.Names.Plural, cancellationToken);
 			}
-        }
+
+            // remove
+
+            _appData.WebApiResourceObjects.TryRemove(webApiResourceObject.LongName, out var _);
+		}
     }
 }

@@ -1,11 +1,11 @@
-﻿using System.Text.Json.Nodes;
+﻿using Common.Models;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Systems.KubernetesSystem
 {
-    public interface IResourceObjectEventHandler
+	public interface IResourceObjectEventHandler
     {
-        public Task HandleAsync(JsonObject resourceObjectEvent, CancellationToken cancellationToken);
+        public Task HandleAsync(ResourceObject resourceObjectEvent, CancellationToken cancellationToken);
     }
 }
