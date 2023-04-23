@@ -141,7 +141,7 @@ namespace Systems.KubernetesSystem.Impl
 				if (exception.Response.StatusCode == HttpStatusCode.Forbidden)
 				{
 					_logger.LogWarning("Lookup for {Kind} was forbidden : check RBAC for {FineController} container", apiEndpoint.KindLowerCase, Constants.FineController);
-					throw;
+					return default;
 				}
 
 				if (exception.Response.StatusCode != HttpStatusCode.NotFound)
@@ -163,7 +163,7 @@ namespace Systems.KubernetesSystem.Impl
 				if (exception.Response.StatusCode == HttpStatusCode.Forbidden)
 				{
 					_logger.LogWarning("Lookup for {Kind} was forbidden : check RBAC for {FineController} container", apiEndpoint.KindLowerCase, Constants.FineController);
-					throw;
+					return default;
 				}
 
 				if (exception.Response.StatusCode != HttpStatusCode.NotFound)
@@ -185,7 +185,7 @@ namespace Systems.KubernetesSystem.Impl
 				if (exception.Response.StatusCode == HttpStatusCode.Forbidden)
 				{
 					_logger.LogWarning("Lookup for {Kind} was forbidden : check RBAC for {FineController} container", apiEndpoint.KindLowerCase, Constants.FineController);
-					throw;
+					return default;
 				}
 
 				if (exception.Response.StatusCode != HttpStatusCode.NotFound)
@@ -207,7 +207,7 @@ namespace Systems.KubernetesSystem.Impl
 				if (exception.Response.StatusCode == HttpStatusCode.Forbidden)
 				{
 					_logger.LogWarning("Lookup for {Kind} was forbidden : check RBAC for {FineController} container", apiEndpoint.KindLowerCase, Constants.FineController);
-					throw;
+					return default;
 				}
 
 				if (exception.Response.StatusCode != HttpStatusCode.NotFound)
@@ -229,7 +229,7 @@ namespace Systems.KubernetesSystem.Impl
 				if (exception.Response.StatusCode == HttpStatusCode.Forbidden)
 				{
 					_logger.LogWarning("Lookup for {Kind} was forbidden : check RBAC for {FineController} container", apiEndpoint.KindLowerCase, Constants.FineController);
-					throw;
+					return default;
 				}
 
 				if (exception.Response.StatusCode != HttpStatusCode.NotFound)
@@ -251,7 +251,7 @@ namespace Systems.KubernetesSystem.Impl
 				if (exception.Response.StatusCode == HttpStatusCode.Forbidden)
 				{
 					_logger.LogWarning("Lookup for {Kind} was forbidden : check RBAC for {FineController} container", apiEndpoint.KindLowerCase, Constants.FineController);
-					throw;
+					return default;
 				}
 
 				if (exception.Response.StatusCode != HttpStatusCode.NotFound)
