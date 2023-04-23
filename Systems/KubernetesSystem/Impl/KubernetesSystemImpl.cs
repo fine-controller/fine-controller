@@ -2,11 +2,13 @@
 using Common.Utils;
 using Humanizer;
 using k8s;
+using k8s.Autorest;
 using k8s.Models;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Systems.BackgroundServiceSystem;
@@ -134,15 +136,15 @@ namespace Systems.KubernetesSystem.Impl
 				await _kubernetesClient.Client.CustomObjects.ListClusterCustomObjectAsync(group, apiEndpoint.VersionLowerCase, kindOrigional, limit: 1, cancellationToken: cancellationToken);
 				return kindOrigional;
 			}
-			catch (Exception exception)
+			catch (HttpOperationException exception)
 			{
-				if (exception.Message.Contains("Forbidden", StringComparison.OrdinalIgnoreCase))
+				if (exception.Response.StatusCode == HttpStatusCode.Forbidden)
 				{
 					_logger.LogInformation("Lookup for {Kind} was forbidden : check RBAC for {FineController} container", apiEndpoint.KindLowerCase, Constants.FineController);
 					throw;
 				}
 
-				if (!exception.Message.Contains("NotFound", StringComparison.OrdinalIgnoreCase))
+				if (exception.Response.StatusCode != HttpStatusCode.NotFound)
 				{
 					throw;
 				}
@@ -156,15 +158,15 @@ namespace Systems.KubernetesSystem.Impl
 				await _kubernetesClient.Client.CustomObjects.ListClusterCustomObjectAsync(group, apiEndpoint.VersionLowerCase, kindSingularized, limit: 1, cancellationToken: cancellationToken);
 				return kindSingularized;
 			}
-			catch (Exception exception)
+			catch (HttpOperationException exception)
 			{
-				if (exception.Message.Contains("Forbidden", StringComparison.OrdinalIgnoreCase))
+				if (exception.Response.StatusCode == HttpStatusCode.Forbidden)
 				{
 					_logger.LogInformation("Lookup for {Kind} was forbidden : check RBAC for {FineController} container", apiEndpoint.KindLowerCase, Constants.FineController);
 					throw;
 				}
 
-				if (!exception.Message.Contains("NotFound", StringComparison.OrdinalIgnoreCase))
+				if (exception.Response.StatusCode != HttpStatusCode.NotFound)
 				{
 					throw;
 				}
@@ -178,15 +180,15 @@ namespace Systems.KubernetesSystem.Impl
 				await _kubernetesClient.Client.CustomObjects.ListClusterCustomObjectAsync(group, apiEndpoint.VersionLowerCase, kindPluralized, limit: 1, cancellationToken: cancellationToken);
 				return kindPluralized;
 			}
-			catch (Exception exception)
+			catch (HttpOperationException exception)
 			{
-				if (exception.Message.Contains("Forbidden", StringComparison.OrdinalIgnoreCase))
+				if (exception.Response.StatusCode == HttpStatusCode.Forbidden)
 				{
 					_logger.LogInformation("Lookup for {Kind} was forbidden : check RBAC for {FineController} container", apiEndpoint.KindLowerCase, Constants.FineController);
 					throw;
 				}
 
-				if (!exception.Message.Contains("NotFound", StringComparison.OrdinalIgnoreCase))
+				if (exception.Response.StatusCode != HttpStatusCode.NotFound)
 				{
 					throw;
 				}
@@ -200,15 +202,15 @@ namespace Systems.KubernetesSystem.Impl
 				await _kubernetesClient.Client.CustomObjects.ListClusterCustomObjectAsync(group, apiEndpoint.VersionLowerCase, kindOrigionalWithoutVersion, limit: 1, cancellationToken: cancellationToken);
 				return kindOrigionalWithoutVersion;
 			}
-			catch (Exception exception)
+			catch (HttpOperationException exception)
 			{
-				if (exception.Message.Contains("Forbidden", StringComparison.OrdinalIgnoreCase))
+				if (exception.Response.StatusCode == HttpStatusCode.Forbidden)
 				{
 					_logger.LogInformation("Lookup for {Kind} was forbidden : check RBAC for {FineController} container", apiEndpoint.KindLowerCase, Constants.FineController);
 					throw;
 				}
 
-				if (!exception.Message.Contains("NotFound", StringComparison.OrdinalIgnoreCase))
+				if (exception.Response.StatusCode != HttpStatusCode.NotFound)
 				{
 					throw;
 				}
@@ -222,15 +224,15 @@ namespace Systems.KubernetesSystem.Impl
 				await _kubernetesClient.Client.CustomObjects.ListClusterCustomObjectAsync(group, apiEndpoint.VersionLowerCase, kindSingularizedWithoutVersion, limit: 1, cancellationToken: cancellationToken);
 				return kindSingularizedWithoutVersion;
 			}
-			catch (Exception exception)
+			catch (HttpOperationException exception)
 			{
-				if (exception.Message.Contains("Forbidden", StringComparison.OrdinalIgnoreCase))
+				if (exception.Response.StatusCode == HttpStatusCode.Forbidden)
 				{
 					_logger.LogInformation("Lookup for {Kind} was forbidden : check RBAC for {FineController} container", apiEndpoint.KindLowerCase, Constants.FineController);
 					throw;
 				}
 
-				if (!exception.Message.Contains("NotFound", StringComparison.OrdinalIgnoreCase))
+				if (exception.Response.StatusCode != HttpStatusCode.NotFound)
 				{
 					throw;
 				}
@@ -244,15 +246,15 @@ namespace Systems.KubernetesSystem.Impl
 				await _kubernetesClient.Client.CustomObjects.ListClusterCustomObjectAsync(group, apiEndpoint.VersionLowerCase, kindPluralizedWithoutVersion, limit: 1, cancellationToken: cancellationToken);
 				return kindPluralizedWithoutVersion;
 			}
-			catch (Exception exception)
+			catch (HttpOperationException exception)
 			{
-				if (exception.Message.Contains("Forbidden", StringComparison.OrdinalIgnoreCase))
+				if (exception.Response.StatusCode == HttpStatusCode.Forbidden)
 				{
 					_logger.LogInformation("Lookup for {Kind} was forbidden : check RBAC for {FineController} container", apiEndpoint.KindLowerCase, Constants.FineController);
 					throw;
 				}
 
-				if (!exception.Message.Contains("NotFound", StringComparison.OrdinalIgnoreCase))
+				if (exception.Response.StatusCode != HttpStatusCode.NotFound)
 				{
 					throw;
 				}
