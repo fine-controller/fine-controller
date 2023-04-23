@@ -63,7 +63,7 @@ namespace Systems.ApiSystem.Impl
 			
 			if (!response.IsSuccessful)
 			{
-				_logger.LogWarning("{Status} {Message}", response.StatusCode, response.Content);
+				_logger.LogWarning("{Path} {Status} {Message}", "health", response.StatusCode, response.Content);
 			}
 
 			return response.IsSuccessful;
