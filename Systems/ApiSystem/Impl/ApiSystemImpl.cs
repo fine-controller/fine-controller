@@ -220,7 +220,7 @@ namespace Systems.ApiSystem.Impl
 
 		public async Task AddOrUpdateAsync(ResourceObject resourceObject, CancellationToken cancellationToken)
 		{
-			var logTag = $"{resourceObject.EventType} {resourceObject.LongName}";
+			var logTag = $"Event:{resourceObject.EventType} Name:{resourceObject.LongName} ResourceVersion:{resourceObject.ResourceVersion()}";
 
 			try
 			{
@@ -235,7 +235,7 @@ namespace Systems.ApiSystem.Impl
 
 		public async Task DeleteAsync(ResourceObject resourceObject, CancellationToken cancellationToken)
 		{
-			var logTag = $"{resourceObject.EventType} {resourceObject.LongName}";
+			var logTag = $"Event:{resourceObject.EventType} Name:{resourceObject.LongName} ResourceVersion:{resourceObject.ResourceVersion()}";
 
 			try
 			{
