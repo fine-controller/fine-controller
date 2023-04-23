@@ -136,6 +136,12 @@ namespace Systems.KubernetesSystem.Impl
 			}
 			catch (Exception exception)
 			{
+				if (exception.Message.Contains("Forbidden", StringComparison.OrdinalIgnoreCase))
+				{
+					_logger.LogInformation("Lookup for {Kind} was forbidden : check RBAC for {FineController} container", apiEndpoint.KindLowerCase, Constants.FineController);
+					throw;
+				}
+
 				if (!exception.Message.Contains("NotFound", StringComparison.OrdinalIgnoreCase))
 				{
 					throw;
@@ -152,6 +158,12 @@ namespace Systems.KubernetesSystem.Impl
 			}
 			catch (Exception exception)
 			{
+				if (exception.Message.Contains("Forbidden", StringComparison.OrdinalIgnoreCase))
+				{
+					_logger.LogInformation("Lookup for {Kind} was forbidden : check RBAC for {FineController} container", apiEndpoint.KindLowerCase, Constants.FineController);
+					throw;
+				}
+
 				if (!exception.Message.Contains("NotFound", StringComparison.OrdinalIgnoreCase))
 				{
 					throw;
@@ -168,6 +180,12 @@ namespace Systems.KubernetesSystem.Impl
 			}
 			catch (Exception exception)
 			{
+				if (exception.Message.Contains("Forbidden", StringComparison.OrdinalIgnoreCase))
+				{
+					_logger.LogInformation("Lookup for {Kind} was forbidden : check RBAC for {FineController} container", apiEndpoint.KindLowerCase, Constants.FineController);
+					throw;
+				}
+
 				if (!exception.Message.Contains("NotFound", StringComparison.OrdinalIgnoreCase))
 				{
 					throw;
@@ -184,6 +202,12 @@ namespace Systems.KubernetesSystem.Impl
 			}
 			catch (Exception exception)
 			{
+				if (exception.Message.Contains("Forbidden", StringComparison.OrdinalIgnoreCase))
+				{
+					_logger.LogInformation("Lookup for {Kind} was forbidden : check RBAC for {FineController} container", apiEndpoint.KindLowerCase, Constants.FineController);
+					throw;
+				}
+
 				if (!exception.Message.Contains("NotFound", StringComparison.OrdinalIgnoreCase))
 				{
 					throw;
@@ -200,6 +224,12 @@ namespace Systems.KubernetesSystem.Impl
 			}
 			catch (Exception exception)
 			{
+				if (exception.Message.Contains("Forbidden", StringComparison.OrdinalIgnoreCase))
+				{
+					_logger.LogInformation("Lookup for {Kind} was forbidden : check RBAC for {FineController} container", apiEndpoint.KindLowerCase, Constants.FineController);
+					throw;
+				}
+
 				if (!exception.Message.Contains("NotFound", StringComparison.OrdinalIgnoreCase))
 				{
 					throw;
@@ -216,6 +246,12 @@ namespace Systems.KubernetesSystem.Impl
 			}
 			catch (Exception exception)
 			{
+				if (exception.Message.Contains("Forbidden", StringComparison.OrdinalIgnoreCase))
+				{
+					_logger.LogInformation("Lookup for {Kind} was forbidden : check RBAC for {FineController} container", apiEndpoint.KindLowerCase, Constants.FineController);
+					throw;
+				}
+
 				if (!exception.Message.Contains("NotFound", StringComparison.OrdinalIgnoreCase))
 				{
 					throw;
