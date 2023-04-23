@@ -100,7 +100,7 @@ namespace Systems.KubernetesSystem.HostedServices
 						{
 							if (exception.Response.StatusCode == HttpStatusCode.Forbidden)
 							{
-								_logger.LogWarning("Streaming for {LogTag} was forbidden : check RBAC for {FineController} container", logTag, Constants.FineController);
+								_logger.LogWarning("{LogTag} : {Message}", logTag, $"Streaming Forbidden : check RBAC for {Constants.FineController} container");
 								throw;
 							}
 						}
