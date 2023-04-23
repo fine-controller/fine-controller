@@ -60,6 +60,12 @@ namespace Systems.ApiSystem.Impl
 		{
 			var request = new RestRequest("health", Method.GET);
 			var response = await _restClient.ExecuteAsync(request, cancellationToken);
+			
+			if (!response.IsSuccessful)
+			{
+				_logger.LogWarning("{Status} {Message}", response.StatusCode, response.Content);
+			}
+
 			return response.IsSuccessful;
 		}
 

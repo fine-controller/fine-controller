@@ -52,7 +52,7 @@ var appLifetime = app.Services.GetRequiredService<IHostApplicationLifetime>();
 
 while (!await apiSystem.IsRunningAsync(appCancellationToken.Token))
 {
-	logger.LogInformation($"Waiting for API to start : {apiSystem.GetBaseUrl()}");
+	logger.LogInformation("Waiting for API to start : {BaseUrl}", apiSystem.GetBaseUrl());
 	await Task.Delay(1000);
 }
 
