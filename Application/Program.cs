@@ -64,6 +64,11 @@ appLifetime.ApplicationStarted.Register(async () =>
 		{
 			await kubernetesSystem.StartStreamingResourceObjectEventsAsync(definition.Spec.Group, definition.Spec.Versions[0].Name, definition.Spec.Names.Plural, appCancellationToken.Token);
 		}
+
+		foreach (var knownKindApiEndpoints in appData.KnownKindApiEndpoints)
+		{
+			await kubernetesSystem.StartStreamingResourceObjectEventsAsync(knownKindApiEndpoints.GroupLowerCase ?? string.Empty, knownKindApiEndpoints.VersionLowerCase, knownKindApiEndpoints.KnownKindLowerCase, appCancellationToken.Token);
+		}
 	}
 	catch (Exception exception)
 	{

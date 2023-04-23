@@ -2,6 +2,8 @@
 using k8s;
 using Services;
 using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Systems.KubernetesSystem;
@@ -10,6 +12,7 @@ namespace Application.EventHandlers
 {
 	internal class ResourceObjectEventEventHandler : IResourceObjectEventHandler
 	{
+		private readonly ConcurrentDictionary<string, SemaphoreSlim> _semaphores = new();
 		private readonly IResourceObjectEventEventService _resourceObjectEventEventService;
 
 		public ResourceObjectEventEventHandler
@@ -29,17 +32,37 @@ namespace Application.EventHandlers
 				throw new ArgumentNullException(nameof(resourceObject));
 			}
 
-			// delete
+			// semaphore to limit concurrency so versions are not messed up
+			// named for each specific resource object so that concurrency is allowed for different resource objects
 
-			if (resourceObject.EventType == WatchEventType.Deleted)
+			var namedSemaphore = _semaphores.GetOrAdd(resourceObject.LongName, x => new(1));
+
+			// process
+
+			try
 			{
-				await _resourceObjectEventEventService.DeleteAsync(resourceObject, cancellationToken);
-				return;
+				if (resourceObject.EventType == WatchEventType.Deleted)
+				{
+					await _resourceObjectEventEventService.DeleteAsync(resourceObject, cancellationToken);
+				}
+				else
+				{
+					await _resourceObjectEventEventService.AddOrUpdateAsync(resourceObject, cancellationToken);
+				}
 			}
+			finally
+			{
+				// release semaphore
 
-			// add
+				namedSemaphore.Release();
 
-			await _resourceObjectEventEventService.AddOrUpdateAsync(resourceObject, cancellationToken);
+				// clean up
+
+				if (resourceObject.EventType == WatchEventType.Deleted)
+				{
+					_semaphores.Remove(resourceObject.LongName, out var _);
+				}
+			}
 		}
 	}
 }

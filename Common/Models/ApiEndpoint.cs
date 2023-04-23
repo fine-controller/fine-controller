@@ -4,19 +4,20 @@ using System.Linq;
 
 namespace Common.Models
 {
-	public class WebApiEndpoint
+	public class ApiEndpoint
 	{
-		public string NameLowerCase { get; set; }
-		public string KindLowerCase { get; set; }
-		public string PathLowerCase { get; set; }
-		public string GroupLowerCase { get; set; }
-		public string VersionLowerCase { get; set; }
-		public string NamespaceLowerCase { get; set; }
-		public OpenApiOperation Operation { get; set; }
-		public OperationType OperationType { get; set; }
-		public OpenApiPathItem OpenApiPathItem { get; set; }
-
-		public WebApiEndpoint(string path, OpenApiPathItem openApiItem, OperationType? operationType, OpenApiOperation openApiOperation, string defaultGroup)
+		public string NameLowerCase { get; }
+		public string KindLowerCase { get; }
+		public string PathLowerCase { get; }
+		public string GroupLowerCase { get; }
+		public string VersionLowerCase { get; }
+		public string NamespaceLowerCase { get; }
+		public OpenApiOperation Operation { get; }
+		public OperationType OperationType { get; }
+		public string KnownKindLowerCase { get; set; }
+		public OpenApiPathItem OpenApiPathItem { get; }
+		
+		public ApiEndpoint(string path, OpenApiPathItem openApiItem, OperationType? operationType, OpenApiOperation openApiOperation, string defaultGroup)
 		{
 			path = path?.Trim()?.ToLower();
 
@@ -49,7 +50,7 @@ namespace Common.Models
 
 			if (defaultGroup == "-")
 			{
-				throw new ArgumentException($"{nameof(defaultGroup)} must not be '-'", nameof(defaultGroup));
+				throw new ArgumentException($"{nameof(defaultGroup)} must not be '-'");
 			}
 
 			Operation = openApiOperation;
@@ -61,7 +62,7 @@ namespace Common.Models
 
 			if (pathLowerCaseArray.Length != 5)
 			{
-				throw new ArgumentException("Key must be a path with 5 segments separated by /", nameof(path));
+				throw new ArgumentException("Key must be a path with 5 segments separated by /");
 			}
 
 			// group
@@ -70,7 +71,7 @@ namespace Common.Models
 
 			if (string.IsNullOrWhiteSpace(GroupLowerCase))
 			{
-				throw new ArgumentException("Path segment index 0 (group) is required", nameof(path));
+				throw new ArgumentException("Path segment index 0 (group) is required");
 			}
 
 			if (GroupLowerCase == ".")
@@ -89,17 +90,17 @@ namespace Common.Models
 
 			if (string.IsNullOrWhiteSpace(VersionLowerCase))
 			{
-				throw new ArgumentException("Path segment index 1 (version) is required", nameof(path));
+				throw new ArgumentException("Path segment index 1 (version) is required");
 			}
 
 			if (!VersionLowerCase.StartsWith("v"))
 			{
-				throw new ArgumentException("Path segment index 1 (version) must start with 'v'", nameof(path));
+				throw new ArgumentException("Path segment index 1 (version) must start with 'v'");
 			}
 			
 			if (VersionLowerCase.Length == 1)
 			{
-				throw new ArgumentException("Path segment index 1 (version) must have length > 1", nameof(path));
+				throw new ArgumentException("Path segment index 1 (version) must have length > 1");
 			}
 
 			// kind
@@ -108,17 +109,17 @@ namespace Common.Models
 
 			if (string.IsNullOrWhiteSpace(KindLowerCase))
 			{
-				throw new ArgumentException("Path segment index 2 (kind) is required", nameof(path));
+				throw new ArgumentException("Path segment index 2 (kind) is required");
 			}
 
 			if (!KindLowerCase.StartsWith(VersionLowerCase))
 			{
-				throw new ArgumentException("Path segment index 2 (kind) must start with the version (segment index 1)", nameof(path));
+				throw new ArgumentException("Path segment index 2 (kind) must start with the version (segment index 1)");
 			}
 
 			if (KindLowerCase.Length == VersionLowerCase.Length)
 			{
-				throw new ArgumentException("Path segment index 2 (kind) must start have a name after the version prefix", nameof(path));
+				throw new ArgumentException("Path segment index 2 (kind) must start have a name after the version prefix");
 			}
 
 			// namespace
@@ -127,7 +128,7 @@ namespace Common.Models
 
 			if (string.IsNullOrWhiteSpace(NamespaceLowerCase))
 			{
-				throw new ArgumentException("Path segment index 3 (namespace) is required", nameof(path));
+				throw new ArgumentException("Path segment index 3 (namespace) is required");
 			}
 
 			if (NamespaceLowerCase.Equals("-"))
@@ -136,7 +137,7 @@ namespace Common.Models
 			}
 			else if (!NamespaceLowerCase.Equals("{namespace}"))
 			{
-				throw new ArgumentException("segment index 3 (namespace) must be '{namespace}' or '-'", nameof(path));
+				throw new ArgumentException("segment index 3 (namespace) must be '{namespace}' or '-'");
 			}
 
 			// name
@@ -145,7 +146,7 @@ namespace Common.Models
 
 			if (string.IsNullOrWhiteSpace(NameLowerCase))
 			{
-				throw new ArgumentException("Path segment index 4 (name) is required", nameof(path));
+				throw new ArgumentException("Path segment index 4 (name) is required");
 			}
 		}
 	}

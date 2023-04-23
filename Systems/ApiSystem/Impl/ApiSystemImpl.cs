@@ -1,5 +1,6 @@
 ﻿using Common.Models;
 using Common.Utils;
+using k8s;
 using k8s.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
@@ -11,30 +12,32 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Systems.KubernetesSystem;
 
 namespace Systems.ApiSystem.Impl
 {
 	internal class ApiSystemImpl : IApiSystem
 	{
-		protected static readonly string[] K8S_MODEL_NAMES = typeof(V1ClusterRole).Assembly.GetTypes().Select(x => x.Name).ToArray();
-		protected static readonly string[] OPEN_API_MODEL_NAMES = typeof(OpenApiSchema).Assembly.GetTypes().Select(x => x.Name).ToArray();
 		protected static readonly JsonSerializerSettings JSON_SERIALIZER_SETTINGS = new() { ReferenceLoopHandling = ReferenceLoopHandling.Ignore, NullValueHandling = NullValueHandling.Ignore, Formatting = Formatting.None };
 
 		private readonly ILogger _logger;
 		private readonly AppData _appData;
 		private readonly RestClient _restClient;
 		private readonly AppSettings _appSettings;
+		private readonly IKubernetesSystem _kubernetesSystem;
 
         public ApiSystemImpl
 		(
 			AppData appData,
 			AppSettings appSettings,
-			ILogger<ApiSystemImpl> logger
+			ILogger<ApiSystemImpl> logger,
+			IKubernetesSystem kubernetesSystem
 		)
 		{
 			_logger = logger ?? throw new ArgumentNullException(nameof(logger));
 			_appData = appData ?? throw new ArgumentNullException(nameof(appData));
 			_appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
+			_kubernetesSystem = kubernetesSystem ?? throw new ArgumentNullException(nameof(kubernetesSystem));
 
 			var scheme = _appSettings.API_HTTPS.Value ? "https" : "http";
 			var baseUrl = $"{scheme}://{_appSettings.API_HOST}:{_appSettings.API_PORT}";
@@ -113,21 +116,21 @@ namespace Systems.ApiSystem.Impl
 
 			var definitions = new List<CustomResourceDefinitionResourceObject>();
 
-			var apiSchemas = openApiDocument.Components.Schemas
-				.Where(x => !K8S_MODEL_NAMES.Contains(x.Key, StringComparer.OrdinalIgnoreCase))
-				.Where(x => !OPEN_API_MODEL_NAMES.Contains(x.Key, StringComparer.OrdinalIgnoreCase))
-				.ToList();
+			var knownKindApiEndpoints = new List<ApiEndpoint>();
 
-			_appData.ApiPaths = openApiDocument.Paths
+			var apiSchemas = openApiDocument.Components.Schemas.ToList();
+
+			var apiEndpoints = openApiDocument.Paths
+				.Where(x => !x.Key.Trim().Trim('/').ToLower().Equals("health", StringComparison.OrdinalIgnoreCase)) // skip health check endpoint
 				.SelectMany(x => x.Value.Operations.Select(o =>
 				{
 					try
 					{
-						return new WebApiEndpoint(x.Key, x.Value, o.Key, o.Value, _appSettings.API_GROUP);
+						return new ApiEndpoint(x.Key, x.Value, o.Key, o.Value, _appSettings.API_GROUP);
 					}
 					catch (Exception exception)
 					{
-						_logger.LogInformation("Path '{Path}' skipped because '{Message}'", x.Key, exception.Message);
+						_logger.LogWarning("Path '{Path}' skipped because '{Message}'", x.Key, exception.Message);
 						return null;
 					}
 				}))
@@ -137,22 +140,34 @@ namespace Systems.ApiSystem.Impl
 
 			foreach (var apiSchemaKeyAndValue in apiSchemas)
 			{
-				var putEndpoint = _appData.ApiPaths.SingleOrDefault(x => x.OperationType == OperationType.Put && x.KindLowerCase.Equals(apiSchemaKeyAndValue.Key, StringComparison.OrdinalIgnoreCase));
-				var deleteEndpoint = _appData.ApiPaths.SingleOrDefault(x => x.OperationType == OperationType.Delete && x.KindLowerCase.Equals(apiSchemaKeyAndValue.Key, StringComparison.OrdinalIgnoreCase));
+				var putEndpoint = apiEndpoints.SingleOrDefault(x => x.OperationType == OperationType.Put && x.KindLowerCase.Equals(apiSchemaKeyAndValue.Key, StringComparison.OrdinalIgnoreCase));
+				var deleteEndpoint = apiEndpoints.SingleOrDefault(x => x.OperationType == OperationType.Delete && x.KindLowerCase.Equals(apiSchemaKeyAndValue.Key, StringComparison.OrdinalIgnoreCase));
 
-				if (putEndpoint is null)
+				if (putEndpoint is null || deleteEndpoint is null)
 				{
-					continue;
-				}
-
-				if (deleteEndpoint is null)
-				{
-					continue;
+					continue; // skip supporting schema/type
 				}
 
 				if (!string.IsNullOrWhiteSpace(putEndpoint.NamespaceLowerCase) && !putEndpoint.NamespaceLowerCase.Equals(deleteEndpoint.NamespaceLowerCase, StringComparison.OrdinalIgnoreCase))
 				{
-					throw new ApplicationException($"PUT and DELETE endpoints for schema '{apiSchemaKeyAndValue.Key}' must have the same value for the namespace segment index 3");
+					_logger.LogWarning("PUT and DELETE endpoints for schema '{Schema}' must have the same value for the namespace (segment index 3)", apiSchemaKeyAndValue.Key);
+					continue;
+				}
+
+				if (putEndpoint.GroupLowerCase?.Equals(_appSettings.API_GROUP, StringComparison.OrdinalIgnoreCase) != true)
+				{
+					putEndpoint.KnownKindLowerCase = await _kubernetesSystem.GetKnownKindForApiEndpointAsync(putEndpoint, cancellationToken);
+
+					if (!string.IsNullOrWhiteSpace(putEndpoint.KnownKindLowerCase))
+					{
+						knownKindApiEndpoints.Add(putEndpoint);
+					}
+					else
+					{
+						_logger.LogWarning("Unknown resource kind '{Kind}'", $"{putEndpoint.GroupLowerCase}/{putEndpoint.VersionLowerCase}/{putEndpoint.KindLowerCase}");
+					}
+
+					continue;
 				}
 
 				var kind = apiSchemaKeyAndValue.Key;
@@ -188,16 +203,37 @@ namespace Systems.ApiSystem.Impl
 			}
 
 			_appData.CustomResourceDefinitions = definitions;
+			_appData.KnownKindApiEndpoints = knownKindApiEndpoints;
 		}
 
-		public Task AddOrUpdateAsync(ResourceObject resourceObject, CancellationToken cancellationToken)
+		public async Task AddOrUpdateAsync(ResourceObject resourceObject, CancellationToken cancellationToken)
 		{
-			throw new NotImplementedException();
+			var logTag = $"{resourceObject.EventType} {resourceObject.LongName}";
+
+			try
+			{
+				await Task.CompletedTask;
+				_logger.LogInformation("{LogTag} : SUCCESS", logTag);
+			}
+			catch (Exception exception)
+			{
+				_logger.LogError(exception, "{LogTag} : ERROR", logTag);
+			}
 		}
 
-		public Task DeleteAsync(ResourceObject resourceObject, CancellationToken cancellationToken)
+		public async Task DeleteAsync(ResourceObject resourceObject, CancellationToken cancellationToken)
 		{
-			throw new NotImplementedException();
+			var logTag = $"{resourceObject.EventType} {resourceObject.LongName}";
+
+			try
+			{
+				await Task.CompletedTask;
+				_logger.LogInformation("{LogTag} : SUCCESS", logTag);
+			}
+			catch (Exception exception)
+			{
+				_logger.LogError(exception, "{LogTag} : ERROR", logTag);
+			}
 		}
 	}
 }

@@ -35,6 +35,8 @@ namespace Services.Impl
 				return; // old news
 			}
 
+			var semaphore = new SemaphoreSlim(initialCount: 3);
+
 			// dispatch update
 
 			await _apiSystem.AddOrUpdateAsync(resourceObject, cancellationToken);
