@@ -63,7 +63,7 @@ namespace Systems.KubernetesSystem.HostedServices
 			var parallelOptions = new ParallelOptions
             {
                 CancellationToken = cancellationToken,
-                MaxDegreeOfParallelism = _appSettings.IsProduction ? default : 1,
+                MaxDegreeOfParallelism = _appSettings.IsProduction ? -1 : 1,
 			};
 
 			var logTag = $"{NameUtil.GetKindLongName(Group, Version, NamePlural)} Events";
