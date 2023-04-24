@@ -109,7 +109,7 @@ namespace Systems.KubernetesSystem.Impl
 					continue;
 				}
 
-				if (current.FineControllerHash.Equals(customResourceDefinition.FineControllerHash, StringComparison.OrdinalIgnoreCase))
+				if (current.FineOperatorHash.Equals(customResourceDefinition.FineOperatorHash, StringComparison.OrdinalIgnoreCase))
 				{
 					continue;
 				}

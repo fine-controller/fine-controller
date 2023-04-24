@@ -196,8 +196,8 @@ namespace Systems.ApiSystem.Impl
 				definition.Metadata.EnsureLabels();
 				definition.Metadata.EnsureAnnotations();
 				definition.Metadata.Name = $"{kind.ToLower()}.{_appSettings.API_GROUP}";
-				definition.Metadata.Labels[Constants.FineControllerGroup] = _appSettings.API_GROUP;
-				definition.Metadata.Annotations[Constants.FineControllerHash] = HashUtil.Hash(apiSchemaJson);
+				definition.Metadata.Labels[Constants.FineOperatorGroup] = _appSettings.API_GROUP;
+				definition.Metadata.Annotations[Constants.FineOperatorHash] = HashUtil.Hash(apiSchemaJson);
 				
 				definition.Spec ??= new();
 

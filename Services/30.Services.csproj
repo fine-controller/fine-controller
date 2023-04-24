@@ -21,15 +21,15 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <EditorConfigFiles Remove="C:\Users\Fortune\source\repos\finecontroller\.editorconfig" />
+	  <EditorConfigFiles Remove="C:\Users\Fortune\source\repos\fineoperator\.editorconfig" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <EditorConfigFiles Remove="C:\Users\Fortune\source\repos\finecontroller\.editorconfig" />
+	  <EditorConfigFiles Remove="C:\Users\Fortune\source\repos\fineoperator\.editorconfig" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <None Include="C:\Users\Fortune\source\repos\finecontroller\.editorconfig" />
+	  <None Include="C:\Users\Fortune\source\repos\fineoperator\.editorconfig" />
 	</ItemGroup>
 
 </Project>

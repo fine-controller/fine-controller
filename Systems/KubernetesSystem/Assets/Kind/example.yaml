@@ -23,7 +23,7 @@ spec:
     spec:
       containers:
       - name: example
-        image: fortunen/finecontroller-csharp-example-01
+        image: fortunen/fineoperator-csharp-example-01
         imagePullPolicy: Always
         ports:
         - containerPort: 80

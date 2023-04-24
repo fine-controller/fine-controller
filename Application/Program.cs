@@ -79,7 +79,7 @@ appLifetime.ApplicationStarted.Register(async () =>
 	{
 		if (exception is HttpOperationException httpOperationException && httpOperationException.Response.StatusCode == HttpStatusCode.Forbidden)
 		{
-			logger.LogError(exception, "Failed to start because of a 'Forbidden' error : Please check RBAC for {FineController} container", Constants.FineController);
+			logger.LogError(exception, "Failed to start because of a 'Forbidden' error : Please check RBAC for {FineOperator} container", Constants.FineOperator);
 		}
 		else
 		{

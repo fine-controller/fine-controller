@@ -9,15 +9,15 @@
 		public const string EventTypeDashCase = "event-type";
 		public const string ApiVersionCamelCase = "apiVersion";
 		public const string NamespacedPascalCase = "Namespaced";
-		public const string FineController = "finecontroller.github.io";
+		public const string FineOperator = "fineoperator.github.io";
 		public const string ResourceVersionCamelCase = "resourveVersion";
-		public const string FineControllerPort = $"{FineController}/port";
-		public const string FineControllerHash = $"{FineController}/hash";
-		public const string FineControllerHttps = $"{FineController}/https";
-		public const string FineControllerGroup = $"{FineController}/group";
-		public const string FineControllerSpecPath = $"{FineController}/spec-path";
+		public const string FineOperatorPort = $"{FineOperator}/port";
+		public const string FineOperatorHash = $"{FineOperator}/hash";
+		public const string FineOperatorHttps = $"{FineOperator}/https";
+		public const string FineOperatorGroup = $"{FineOperator}/group";
+		public const string FineOperatorSpecPath = $"{FineOperator}/spec-path";
 		public const string ApiExtensionsK8sIoV1LowerCase = "apiextensions.k8s.io/v1";
-		public const string FineControllerSpecFormat = $"{FineController}/spec-format";
+		public const string FineOperatorSpecFormat = $"{FineOperator}/spec-format";
 		public const string CustomResourceDefinitionPascalCase = "CustomResourceDefinition";
 	}
 }

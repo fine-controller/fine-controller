@@ -25,11 +25,11 @@ namespace Common.Models
 			}
 		}
 
-		public bool FineController
+		public bool FineOperator
 		{
 			get
 			{
-				var stringValue = this.GetLabel(Constants.FineController);
+				var stringValue = this.GetLabel(Constants.FineOperator);
 
 				if (string.IsNullOrWhiteSpace(stringValue))
 				{
@@ -38,22 +38,22 @@ namespace Common.Models
 
 				if (!bool.TryParse(stringValue, out var boolValue))
 				{
-					throw new ApplicationException($"Invalid {Constants.FineController} '{stringValue}' (is not true|false)");
+					throw new ApplicationException($"Invalid {Constants.FineOperator} '{stringValue}' (is not true|false)");
 				}
 
 				return boolValue;
 			}
 		}
 
-		public string FineControllerHash
+		public string FineOperatorHash
 		{
 			get
 			{
-				return this.GetAnnotation(Constants.FineControllerHash);
+				return this.GetAnnotation(Constants.FineOperatorHash);
 			}
 			set
 			{
-				this.SetAnnotation(Constants.FineControllerHash, value);
+				this.SetAnnotation(Constants.FineOperatorHash, value);
 			}
 		}
 
