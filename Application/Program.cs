@@ -1,5 +1,6 @@
 ﻿using Common.Models;
 using Common.Utils;
+using k8s.Autorest;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -9,6 +10,7 @@ using System;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 using System.Threading.Tasks;
 using Systems.ApiSystem;
@@ -75,7 +77,15 @@ appLifetime.ApplicationStarted.Register(async () =>
 	}
 	catch (Exception exception)
 	{
-		logger.LogError(exception, "Failed to start");
+		if (exception is HttpOperationException httpOperationException && httpOperationException.Response.StatusCode == HttpStatusCode.Forbidden)
+		{
+			logger.LogError(exception, "Failed to start because of a 'Forbidden' error : Please check RBAC for {FineController} container", Constants.FineController);
+		}
+		else
+		{
+			logger.LogError(exception, "Failed to start");
+		}
+
 		Environment.Exit(1);
 	}
 });

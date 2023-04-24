@@ -91,20 +91,8 @@ namespace Systems.KubernetesSystem.HostedServices
 
 						_listener?.Dispose();
 						_listener = new(logTag, _logger);
-
-						try
-						{
-							_listener.HttpOperationResponse = await _kubernetesClient.Client.CustomObjects.ListClusterCustomObjectWithHttpMessagesAsync(Group, Version, NamePlural, allowWatchBookmarks: false, watch: true, cancellationToken: cancellationToken);
-						}
-						catch (HttpOperationException exception)
-						{
-							if (exception.Response.StatusCode == HttpStatusCode.Forbidden)
-							{
-								_logger.LogWarning("{LogTag} : {Message}", logTag, $"Streaming Forbidden : check RBAC for {Constants.FineController} container");
-								return;
-							}
-						}
-
+						_listener.HttpOperationResponse = await _kubernetesClient.Client.CustomObjects.ListClusterCustomObjectWithHttpMessagesAsync(Group, Version, NamePlural, allowWatchBookmarks: false, watch: true, cancellationToken: cancellationToken);
+						
 						_listener.Watcher = _listener.HttpOperationResponse.Watch((WatchEventType eventType, object eventData) =>
 						{
 							if (eventType == WatchEventType.Error)

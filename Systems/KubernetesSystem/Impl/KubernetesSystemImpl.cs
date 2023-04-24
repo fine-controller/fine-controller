@@ -128,8 +128,6 @@ namespace Systems.KubernetesSystem.Impl
 				group = string.Empty;
 			}
 
-			var longKind = $"{apiEndpoint.GroupLowerCase ?? "-"}/{apiEndpoint.VersionLowerCase}/{apiEndpoint.KindLowerCase}";
-
 			// try origional
 
 			try
@@ -140,12 +138,6 @@ namespace Systems.KubernetesSystem.Impl
 			}
 			catch (HttpOperationException exception)
 			{
-				if (exception.Response.StatusCode == HttpStatusCode.Forbidden)
-				{
-					_logger.LogWarning("Lookup for {Kind} was forbidden : check RBAC for {FineController} container", longKind, Constants.FineController);
-					return default;
-				}
-
 				if (exception.Response.StatusCode != HttpStatusCode.NotFound)
 				{
 					throw;
@@ -162,12 +154,6 @@ namespace Systems.KubernetesSystem.Impl
 			}
 			catch (HttpOperationException exception)
 			{
-				if (exception.Response.StatusCode == HttpStatusCode.Forbidden)
-				{
-					_logger.LogWarning("Lookup for {Kind} was forbidden : check RBAC for {FineController} container", longKind, Constants.FineController);
-					return default;
-				}
-
 				if (exception.Response.StatusCode != HttpStatusCode.NotFound)
 				{
 					throw;
@@ -184,12 +170,6 @@ namespace Systems.KubernetesSystem.Impl
 			}
 			catch (HttpOperationException exception)
 			{
-				if (exception.Response.StatusCode == HttpStatusCode.Forbidden)
-				{
-					_logger.LogWarning("Lookup for {Kind} was forbidden : check RBAC for {FineController} container", longKind, Constants.FineController);
-					return default;
-				}
-
 				if (exception.Response.StatusCode != HttpStatusCode.NotFound)
 				{
 					throw;
@@ -206,12 +186,6 @@ namespace Systems.KubernetesSystem.Impl
 			}
 			catch (HttpOperationException exception)
 			{
-				if (exception.Response.StatusCode == HttpStatusCode.Forbidden)
-				{
-					_logger.LogWarning("Lookup for {Kind} was forbidden : check RBAC for {FineController} container", longKind, Constants.FineController);
-					return default;
-				}
-
 				if (exception.Response.StatusCode != HttpStatusCode.NotFound)
 				{
 					throw;
@@ -228,12 +202,6 @@ namespace Systems.KubernetesSystem.Impl
 			}
 			catch (HttpOperationException exception)
 			{
-				if (exception.Response.StatusCode == HttpStatusCode.Forbidden)
-				{
-					_logger.LogWarning("Lookup for {Kind} was forbidden : check RBAC for {FineController} container", longKind, Constants.FineController);
-					return default;
-				}
-
 				if (exception.Response.StatusCode != HttpStatusCode.NotFound)
 				{
 					throw;
@@ -250,12 +218,6 @@ namespace Systems.KubernetesSystem.Impl
 			}
 			catch (HttpOperationException exception)
 			{
-				if (exception.Response.StatusCode == HttpStatusCode.Forbidden)
-				{
-					_logger.LogWarning("Lookup for {Kind} was forbidden : check RBAC for {FineController} container", longKind, Constants.FineController);
-					return default;
-				}
-
 				if (exception.Response.StatusCode != HttpStatusCode.NotFound)
 				{
 					throw;
