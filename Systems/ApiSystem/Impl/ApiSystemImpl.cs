@@ -1,6 +1,6 @@
 ﻿using Common.Models;
 using Common.Utils;
-using k8s;
+using Humanizer;
 using k8s.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
@@ -8,6 +8,7 @@ using Microsoft.OpenApi.Readers;
 using Newtonsoft.Json;
 using RestSharp;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -18,7 +19,8 @@ namespace Systems.ApiSystem.Impl
 {
 	internal class ApiSystemImpl : IApiSystem
 	{
-		protected static readonly JsonSerializerSettings JSON_SERIALIZER_SETTINGS = new() { ReferenceLoopHandling = ReferenceLoopHandling.Ignore, NullValueHandling = NullValueHandling.Ignore, Formatting = Formatting.None };
+		private static readonly ConcurrentDictionary<string, string> RESOURCE_OBJECT_NAMES = new();
+        protected static readonly JsonSerializerSettings JSON_SERIALIZER_SETTINGS = new() { ReferenceLoopHandling = ReferenceLoopHandling.Ignore, NullValueHandling = NullValueHandling.Ignore, Formatting = Formatting.None };
 
 		private readonly ILogger _logger;
 		private readonly string _baseUrl;
@@ -169,7 +171,7 @@ namespace Systems.ApiSystem.Impl
 				if (putEndpoint.GroupLowerCase?.Equals(_appSettings.API_GROUP, StringComparison.OrdinalIgnoreCase) != true)
 				{
 					putEndpoint.KnownKindLowerCase = await _kubernetesSystem.GetKnownKindForApiEndpointAsync(putEndpoint, cancellationToken);
-
+					
 					if (!string.IsNullOrWhiteSpace(putEndpoint.KnownKindLowerCase))
 					{
 						knownKindApiEndpoints.Add(putEndpoint);
@@ -218,13 +220,55 @@ namespace Systems.ApiSystem.Impl
 			_appData.KnownKindApiEndpoints = knownKindApiEndpoints;
 		}
 
+		private string GetApiPath(ResourceObject resourceObject)
+		{
+			var kind = resourceObject.Kind;
+			var name = resourceObject.Name();
+			var group = resourceObject.ApiGroup();
+			var @namespace = resourceObject.Namespace();
+			var version = resourceObject.ApiGroupVersion();
+
+			if (string.IsNullOrWhiteSpace(group))
+			{
+				group = "-";
+			}
+
+			if (string.IsNullOrWhiteSpace(@namespace))
+			{
+				@namespace = "-";
+			}
+
+			if (!group.Equals(_appSettings.API_GROUP, StringComparison.OrdinalIgnoreCase))
+			{
+				var endpoint = _appData.KnownKindApiEndpoints
+					.Where(x => !string.IsNullOrWhiteSpace(x.KnownKindLowerCase))
+					.SingleOrDefault(x => x.KnownKindLowerCase.Equals(kind, StringComparison.OrdinalIgnoreCase) || x.KnownKindLowerCase.Singularize().Equals(kind, StringComparison.OrdinalIgnoreCase) || x.KnownKindLowerCase.Pluralize().Equals(kind, StringComparison.OrdinalIgnoreCase));
+
+				if (endpoint is not null)
+				{
+					kind = endpoint.KindLowerCase;
+				}
+			}
+
+			return $"{group}/{version}/{kind}/{@namespace}/{name}";
+		}
+
 		public async Task AddOrUpdateAsync(ResourceObject resourceObject, CancellationToken cancellationToken)
 		{
-			var logTag = $"Event:{resourceObject.EventType} Name:{resourceObject.LongName} ResourceVersion:{resourceObject.ResourceVersion()}";
+			var logTag = $"Event={resourceObject.EventType}  Name={resourceObject.LongName}  ResourceVersion={resourceObject.ResourceVersion()}";
 
 			try
 			{
-				await Task.CompletedTask;
+				var path = RESOURCE_OBJECT_NAMES.GetOrAdd(resourceObject.LongName, x => GetApiPath(resourceObject));
+				logTag = $"Event={resourceObject.EventType}  Path={path}  ResourceVersion={resourceObject.ResourceVersion()}";
+				var request = new RestRequest(path, Method.PUT, DataFormat.Json).AddBody(resourceObject.Data.ToString());
+				var response = await _restClient.ExecuteAsync(request, cancellationToken);
+
+				if (!response.IsSuccessful)
+				{
+					throw new ApplicationException(response.Content);
+				}
+
 				_logger.LogInformation("{LogTag} : SUCCESS", logTag);
 			}
 			catch (Exception exception)
@@ -235,11 +279,21 @@ namespace Systems.ApiSystem.Impl
 
 		public async Task DeleteAsync(ResourceObject resourceObject, CancellationToken cancellationToken)
 		{
-			var logTag = $"Event:{resourceObject.EventType} Name:{resourceObject.LongName} ResourceVersion:{resourceObject.ResourceVersion()}";
+			var logTag = $"Event={resourceObject.EventType}  Name={resourceObject.LongName}  ResourceVersion={resourceObject.ResourceVersion()}";
 
 			try
 			{
-				await Task.CompletedTask;
+				var path = RESOURCE_OBJECT_NAMES.GetOrAdd(resourceObject.LongName, x => GetApiPath(resourceObject));
+				logTag = $"Event={resourceObject.EventType}  Path={path}  ResourceVersion={resourceObject.ResourceVersion()}";
+				var request = new RestRequest(path, Method.DELETE, DataFormat.Json).AddBody(resourceObject.Data.ToString());
+				var response = await _restClient.ExecuteAsync(request, cancellationToken);
+
+				if (!response.IsSuccessful)
+				{
+					throw new ApplicationException(response.Content);
+				}
+
+				RESOURCE_OBJECT_NAMES.Remove(resourceObject.LongName, out var _); // cleanup
 				_logger.LogInformation("{LogTag} : SUCCESS", logTag);
 			}
 			catch (Exception exception)

@@ -16,7 +16,7 @@ namespace Common.Models
 		public OperationType OperationType { get; }
 		public string KnownKindLowerCase { get; set; }
 		public OpenApiPathItem OpenApiPathItem { get; }
-		
+
 		public ApiEndpoint(string path, OpenApiPathItem openApiItem, OperationType? operationType, OpenApiOperation openApiOperation, string defaultGroup)
 		{
 			path = path?.Trim()?.ToLower();
