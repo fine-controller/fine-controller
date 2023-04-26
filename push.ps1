@@ -7,7 +7,7 @@ git push
 
 # DockerHub
 
-docker build . -t fortunen/fineoperator
-docker tag fortunen/fineoperator fortunen/fineoperator
-docker push fortunen/fineoperator
-docker pushrm fortunen/fineoperator # https://github.com/christian-korneck/docker-pushrm
+docker build . -t fortunen/fine-kube-operator
+docker tag fortunen/fine-kube-operator fortunen/fine-kube-operator
+docker push fortunen/fine-kube-operator
+docker pushrm fortunen/fine-kube-operator # https://github.com/christian-korneck/docker-pushrm

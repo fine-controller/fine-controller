@@ -109,12 +109,9 @@ namespace Systems.KubernetesSystem.Impl
 					continue;
 				}
 
-				if (current.FineOperatorHash.Equals(customResourceDefinition.FineOperatorHash, StringComparison.OrdinalIgnoreCase))
-				{
-					continue;
-				}
-
+				customResourceDefinition.Metadata ??= new();
 				customResourceDefinition.Metadata.ResourceVersion = current.ResourceVersion();
+				
 				await _kubernetesClient.Client.ReplaceCustomResourceDefinitionAsync(customResourceDefinition, customResourceDefinition.Name(), cancellationToken: cancellationToken);
 			}
 		}

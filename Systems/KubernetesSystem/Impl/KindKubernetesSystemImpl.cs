@@ -120,7 +120,7 @@ namespace Systems.KubernetesSystem.Impl
 			}
 			else
 			{
-				_logger.LogInformation("Creating cluster {Name}", Constants.FineOperator);
+				_logger.LogInformation("Creating cluster {Name}", Constants.FineKubeOperator);
 
 				CreateClusterAsync().GetAwaiter().GetResult();
 				WaitForClusterAsync().GetAwaiter().GetResult();
@@ -172,7 +172,7 @@ namespace Systems.KubernetesSystem.Impl
 		private async Task<bool> IsClusterRunningAsync()
 		{
 			var result = await ProcessUtil.ExecuteAsync(_kindExecutableFile, new[] { "get", "clusters" }, _appCancellationToken.Token);
-			return result.Trim().Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim()).Any(x => x.Equals(Constants.FineOperator));
+			return result.Trim().Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim()).Any(x => x.Equals(Constants.FineKubeOperator));
 		}
 
 		private async Task<bool> IsIngressNginxInstalledAsync()
@@ -207,7 +207,7 @@ namespace Systems.KubernetesSystem.Impl
 
 		private async Task CreateClusterAsync()
 		{
-			await ProcessUtil.ExecuteAsync(_kindExecutableFile, new[] { "create", "cluster", "--name", Constants.FineOperator, "--config", CLUSTER_CONFIGURATION_YAML_FILE }, _appCancellationToken.Token);
+			await ProcessUtil.ExecuteAsync(_kindExecutableFile, new[] { "create", "cluster", "--name", Constants.FineKubeOperator, "--config", CLUSTER_CONFIGURATION_YAML_FILE }, _appCancellationToken.Token);
 		}
 
 		private async Task InstallIngressNginxAsync()
@@ -252,7 +252,7 @@ namespace Systems.KubernetesSystem.Impl
 
 		private async Task<string> GetClusterKubeConfigAsync()
 		{
-			return await ProcessUtil.ExecuteAsync(_kindExecutableFile, new[] { "get", "kubeconfig", "--name", Constants.FineOperator }, _appCancellationToken.Token);
+			return await ProcessUtil.ExecuteAsync(_kindExecutableFile, new[] { "get", "kubeconfig", "--name", Constants.FineKubeOperator }, _appCancellationToken.Token);
 		}
 	}
 }

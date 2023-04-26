@@ -2,6 +2,7 @@
 using Common.Utils;
 using Humanizer;
 using k8s.Models;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 using Microsoft.OpenApi.Readers;
@@ -28,19 +29,22 @@ namespace Systems.ApiSystem.Impl
 		private readonly RestClient _restClient;
 		private readonly AppSettings _appSettings;
 		private readonly IKubernetesSystem _kubernetesSystem;
+		private readonly IHostApplicationLifetime _hostApplicationLifetime;
 
-        public ApiSystemImpl
+		public ApiSystemImpl
 		(
 			AppData appData,
 			AppSettings appSettings,
 			ILogger<ApiSystemImpl> logger,
-			IKubernetesSystem kubernetesSystem
+			IKubernetesSystem kubernetesSystem,
+			IHostApplicationLifetime hostApplicationLifetime
 		)
 		{
 			_logger = logger ?? throw new ArgumentNullException(nameof(logger));
 			_appData = appData ?? throw new ArgumentNullException(nameof(appData));
 			_appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
 			_kubernetesSystem = kubernetesSystem ?? throw new ArgumentNullException(nameof(kubernetesSystem));
+			_hostApplicationLifetime = hostApplicationLifetime ?? throw new ArgumentNullException(nameof(hostApplicationLifetime));
 
 			var scheme = _appSettings.API_HTTPS.Value ? "https" : "http";
 			_baseUrl = $"{scheme}://{_appSettings.API_HOST}:{_appSettings.API_PORT}";
@@ -71,7 +75,7 @@ namespace Systems.ApiSystem.Impl
 			return response.IsSuccessful;
 		}
 
-		public async Task LoadSpecAsync(CancellationToken cancellationToken)
+		public async Task InitializeAsync(CancellationToken cancellationToken)
 		{
 			// LOAD SPEC
 
@@ -194,10 +198,7 @@ namespace Systems.ApiSystem.Impl
 
 				definition.EnsureMetadata();
 				definition.Metadata.EnsureLabels();
-				definition.Metadata.EnsureAnnotations();
 				definition.Metadata.Name = $"{kind.ToLower()}.{_appSettings.API_GROUP}";
-				definition.Metadata.Labels[Constants.FineOperatorGroup] = _appSettings.API_GROUP;
-				definition.Metadata.Annotations[Constants.FineOperatorHash] = HashUtil.Hash(apiSchemaJson);
 				
 				definition.Spec ??= new();
 
@@ -264,6 +265,12 @@ namespace Systems.ApiSystem.Impl
 				var request = new RestRequest(path, Method.PUT, DataFormat.Json).AddBody(resourceObject.Data.ToString());
 				var response = await _restClient.ExecuteAsync(request, cancellationToken);
 
+				if (response.ErrorException is not null)
+				{
+					_logger.LogError(response.ErrorException, "Network error. Restarting app");
+					_hostApplicationLifetime.StopApplication();
+				}
+
 				if (!response.IsSuccessful)
 				{
 					throw new ApplicationException(response.Content);
@@ -287,6 +294,12 @@ namespace Systems.ApiSystem.Impl
 				logTag = $"Event={resourceObject.EventType}  Path={path}  ResourceVersion={resourceObject.ResourceVersion()}";
 				var request = new RestRequest(path, Method.DELETE, DataFormat.Json).AddBody(resourceObject.Data.ToString());
 				var response = await _restClient.ExecuteAsync(request, cancellationToken);
+
+				if (response.ErrorException is not null)
+				{
+					_logger.LogError(response.ErrorException, "Network error. Restarting app");
+					_hostApplicationLifetime.StopApplication();
+				}
 
 				if (!response.IsSuccessful)
 				{

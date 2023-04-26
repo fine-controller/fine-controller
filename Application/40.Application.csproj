@@ -25,15 +25,15 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <EditorConfigFiles Remove="C:\Users\Fortune\source\repos\fineoperator\.editorconfig" />
+	  <EditorConfigFiles Remove="C:\Users\Fortune\source\repos\fine-kube-operator\.editorconfig" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <EditorConfigFiles Remove="C:\Users\Fortune\source\repos\fineoperator\.editorconfig" />
+	  <EditorConfigFiles Remove="C:\Users\Fortune\source\repos\fine-kube-operator\.editorconfig" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <None Include="C:\Users\Fortune\source\repos\fineoperator\.editorconfig" />
+	  <None Include="C:\Users\Fortune\source\repos\fine-kube-operator\.editorconfig" />
 	</ItemGroup>
 
 </Project>

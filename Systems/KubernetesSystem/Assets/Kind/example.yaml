@@ -23,7 +23,7 @@ spec:
     spec:
       containers:
       - name: example
-        image: fortunen/fineoperator-csharp-example-01
+        image: fortunen/fine-kube-operator-csharp-example-01
         imagePullPolicy: Always
         ports:
         - containerPort: 80

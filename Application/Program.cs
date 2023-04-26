@@ -50,7 +50,7 @@ var appData = app.Services.GetRequiredService<AppData>();
 var apiSystem = app.Services.GetRequiredService<IApiSystem>();
 var logger = app.Services.GetRequiredService<ILogger<Program>>();
 var kubernetesSystem = app.Services.GetRequiredService<IKubernetesSystem>();
-var appLifetime = app.Services.GetRequiredService<IHostApplicationLifetime>();
+var hostApplicationLifetime = app.Services.GetRequiredService<IHostApplicationLifetime>();
 
 while (!await apiSystem.IsRunningAsync(appCancellationToken.Token))
 {
@@ -58,11 +58,11 @@ while (!await apiSystem.IsRunningAsync(appCancellationToken.Token))
 	await Task.Delay(1000);
 }
 
-appLifetime.ApplicationStarted.Register(async () =>
+hostApplicationLifetime.ApplicationStarted.Register(async () =>
 {
 	try
 	{
-		await apiSystem.LoadSpecAsync(appCancellationToken.Token);
+		await apiSystem.InitializeAsync(appCancellationToken.Token);
 		await kubernetesSystem.AddOrUpdateCustomResouceDefinitionsAsync(appData.CustomResourceDefinitions, appCancellationToken.Token);
 
 		foreach (var definition in appData.CustomResourceDefinitions)
@@ -79,18 +79,18 @@ appLifetime.ApplicationStarted.Register(async () =>
 	{
 		if (exception is HttpOperationException httpOperationException && httpOperationException.Response.StatusCode == HttpStatusCode.Forbidden)
 		{
-			logger.LogError(exception, "Failed to start because of a 'Forbidden' error : Please check RBAC for {FineOperator} container", Constants.FineOperator);
+			logger.LogError(exception, "Failed to start because of a 'Forbidden' error : Please check RBAC for {FineKubeOperator} container", Constants.FineKubeOperator);
 		}
 		else
 		{
 			logger.LogError(exception, "Failed to start");
 		}
 
-		Environment.Exit(1);
+		hostApplicationLifetime.StopApplication();
 	}
 });
 
-appLifetime.ApplicationStopping.Register(() =>
+hostApplicationLifetime.ApplicationStopping.Register(() =>
 {
 	appCancellationToken.Source.Cancel();
 });

@@ -25,38 +25,6 @@ namespace Common.Models
 			}
 		}
 
-		public bool FineOperator
-		{
-			get
-			{
-				var stringValue = this.GetLabel(Constants.FineOperator);
-
-				if (string.IsNullOrWhiteSpace(stringValue))
-				{
-					return default;
-				}
-
-				if (!bool.TryParse(stringValue, out var boolValue))
-				{
-					throw new ApplicationException($"Invalid {Constants.FineOperator} '{stringValue}' (is not true|false)");
-				}
-
-				return boolValue;
-			}
-		}
-
-		public string FineOperatorHash
-		{
-			get
-			{
-				return this.GetAnnotation(Constants.FineOperatorHash);
-			}
-			set
-			{
-				this.SetAnnotation(Constants.FineOperatorHash, value);
-			}
-		}
-
 		public static CustomResourceDefinitionResourceObject Convert(V1CustomResourceDefinition v1customResourceDefinition)
 		{
 			if (v1customResourceDefinition is null)
