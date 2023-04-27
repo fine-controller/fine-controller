@@ -1,12 +1,18 @@
 ﻿using Common.Models;
 using Common.Utils;
+using Humanizer;
 using k8s;
+using k8s.Autorest;
 using k8s.Models;
 using Microsoft.Extensions.Logging;
+using NUnit.Framework;
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using Systems.BackgroundServiceSystem;
 using Systems.KubernetesSystem.HostedServices;
 using Systems.KubernetesSystem.Models;
@@ -114,7 +120,7 @@ namespace Systems.KubernetesSystem.Impl
 
 			// Create Kind cluster (if it does not already exist)
 
-			if (IsClusterRunningAsync().GetAwaiter().GetResult())
+			if (IsClusterReadyAsync().GetAwaiter().GetResult())
 			{
 				WaitForClusterAsync().GetAwaiter().GetResult();
 			}
@@ -169,40 +175,68 @@ namespace Systems.KubernetesSystem.Impl
 			_logger.LogInformation("Cluster KubeConfig : \n\n {KubeConfigYaml}", kubeConfigYaml);
 		}
 
-		private async Task<bool> IsClusterRunningAsync()
+		private async Task<bool> IsDeploymentInstalledAsync(string name, string @namespace)
+		{
+			try
+			{
+				var deployment = await _kubernetesClient.Client.AppsV1.ReadNamespacedDeploymentAsync(name, @namespace, cancellationToken: _appCancellationToken.Token);
+				return deployment is not null;
+			}
+			catch (HttpOperationException httpOperationException) when (httpOperationException.Response.StatusCode == HttpStatusCode.NotFound)
+			{
+				return false;
+			}
+		}
+
+		private async Task<bool> IsDeploymentReadyAsync(string name, string @namespace)
+		{
+			try
+			{
+				var deployment = await _kubernetesClient.Client.AppsV1.ReadNamespacedDeploymentAsync(name, @namespace, cancellationToken: _appCancellationToken.Token);
+				return deployment.Status.ReadyReplicas == deployment.Status.Replicas;
+			}
+			catch (HttpOperationException httpOperationException) when (httpOperationException.Response.StatusCode == HttpStatusCode.NotFound)
+			{
+				return false;
+			}
+		}
+
+		private async Task ApplyYamlAsync(string yamlFilePath, string @namespace = null)
+		{
+			var args = new List<string> { "apply", "-f", yamlFilePath };
+			
+			if (!string.IsNullOrWhiteSpace(@namespace))
+			{
+				args.AddRange(new[] { "-n", @namespace });
+			}
+
+			await ProcessUtil.ExecuteAsync(_kubeCtlExecutableFile, args, _appCancellationToken.Token);
+		}
+
+		private async Task<bool> IsClusterReadyAsync()
 		{
 			var result = await ProcessUtil.ExecuteAsync(_kindExecutableFile, new[] { "get", "clusters" }, _appCancellationToken.Token);
-			return result.Trim().Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim()).Any(x => x.Equals(Constants.FineKubeOperator));
+			return result.Trim().Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).Any(x => x.Equals(Constants.FineKubeOperator));
 		}
 
 		private async Task<bool> IsIngressNginxInstalledAsync()
 		{
-			var namespaces = (await _kubernetesClient.Client.ListNamespaceAsync(cancellationToken: _appCancellationToken.Token)).Items.Select(x => x.Name());
-			if (!namespaces.Any(@namespace => @namespace == "ingress-nginx")) return false;
-
-			var result = await ProcessUtil.ExecuteAsync(_kubeCtlExecutableFile, new[] { "get", "--namespace", "ingress-nginx", "--no-headers=true", "deployment/ingress-nginx-controller" }, _appCancellationToken.Token);
-			return result.Trim().Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim()).Any(x => x.StartsWith("ingress-nginx-controller"));
+			return await IsDeploymentInstalledAsync("ingress-nginx-controller", "ingress-nginx");
 		}
 
-		private async Task<bool> IsIngressNginxRunningAsync()
+		private async Task<bool> IsIngressNginxReadyAsync()
 		{
-			var result = await ProcessUtil.ExecuteAsync(_kubeCtlExecutableFile, new[] { "get", "--namespace", "ingress-nginx", "--no-headers=true", "deployment/ingress-nginx-controller" }, _appCancellationToken.Token);
-			return result.Trim().Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim()).Any(x => x.Contains("1/1"));
+			return await IsDeploymentReadyAsync("ingress-nginx-controller", "ingress-nginx");
 		}
 
 		private async Task<bool> IsExampleInstalledAsync()
 		{
-			var namespaces = (await _kubernetesClient.Client.ListNamespaceAsync(cancellationToken: _appCancellationToken.Token)).Items.Select(x => x.Name());
-			if (!namespaces.Any(@namespace => @namespace == "example")) return false;
-
-			var result = await ProcessUtil.ExecuteAsync(_kubeCtlExecutableFile, new[] { "get", "--namespace", "example", "--no-headers=true", "deployment/example" }, _appCancellationToken.Token);
-			return result.Trim().Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim()).Any(x => x.StartsWith("example"));
+			return await IsDeploymentInstalledAsync("example", "example");
 		}
 
-		private async Task<bool> IsExampleRunningAsync()
+		private async Task<bool> IsExampleReadyAsync()
 		{
-			var result = await ProcessUtil.ExecuteAsync(_kubeCtlExecutableFile, new[] { "get", "--namespace", "example", "--no-headers=true", "deployment/example" }, _appCancellationToken.Token);
-			return result.Trim().Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim()).Any(x => x.Contains("1/1"));
+			return await IsDeploymentReadyAsync("example", "example");
 		}
 
 		private async Task CreateClusterAsync()
@@ -212,19 +246,19 @@ namespace Systems.KubernetesSystem.Impl
 
 		private async Task InstallIngressNginxAsync()
 		{
-			await ProcessUtil.ExecuteAsync(_kubeCtlExecutableFile, new[] { "apply", "-n", "ingress-nginx", "-f", INGRESS_NGINX_YAML_FILE }, _appCancellationToken.Token);
+			await ApplyYamlAsync(INGRESS_NGINX_YAML_FILE, "ingress-nginx");
 		}
 
 		private async Task InstallExampleAsync()
 		{
-			await ProcessUtil.ExecuteAsync(_kubeCtlExecutableFile, new[] { "apply", "-f", EXAMPLE_YAML_FILE }, _appCancellationToken.Token);
+			await ApplyYamlAsync(EXAMPLE_YAML_FILE, "example");
 		}
 
 		private async Task WaitForClusterAsync()
 		{
 			_logger.LogInformation("Waiting for Cluster");
 
-			while (!await IsClusterRunningAsync())
+			while (!await IsClusterReadyAsync())
 			{
 				await Task.Delay(2000);
 			}
@@ -234,7 +268,7 @@ namespace Systems.KubernetesSystem.Impl
 		{
 			_logger.LogInformation("Waiting for Ingress-Nginx");
 
-			while (!await IsIngressNginxRunningAsync())
+			while (!await IsIngressNginxReadyAsync())
 			{
 				await Task.Delay(2000);
 			}
@@ -244,7 +278,7 @@ namespace Systems.KubernetesSystem.Impl
 		{
 			_logger.LogInformation("Waiting for Example");
 
-			while (!await IsExampleRunningAsync())
+			while (!await IsExampleReadyAsync())
 			{
 				await Task.Delay(2000);
 			}
