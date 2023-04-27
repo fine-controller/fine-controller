@@ -48,9 +48,9 @@ namespace Common.Models
 				throw new ArgumentNullException(nameof(defaultGroup));
 			}
 
-			if (defaultGroup == "-")
+			if (defaultGroup == Constants.NotApplicableSymbol)
 			{
-				throw new ArgumentException($"{nameof(defaultGroup)} must not be '-'");
+				throw new ArgumentException($"{nameof(defaultGroup)} must not be '{Constants.NotApplicableSymbol}'");
 			}
 
 			Operation = openApiOperation;
@@ -74,12 +74,12 @@ namespace Common.Models
 				throw new ArgumentException("Path segment index 0 (group) is required");
 			}
 
-			if (GroupLowerCase == ".")
+			if (GroupLowerCase == Constants.CurrentApiGroupSymbol)
 			{
 				GroupLowerCase = defaultGroup;
 			}
 			
-			if (GroupLowerCase == "-")
+			if (GroupLowerCase == Constants.NotApplicableSymbol)
 			{
 				GroupLowerCase = null;
 			}
@@ -131,13 +131,13 @@ namespace Common.Models
 				throw new ArgumentException("Path segment index 3 (namespace) is required");
 			}
 
-			if (NamespaceLowerCase.Equals("-"))
+			if (NamespaceLowerCase.Equals(Constants.NotApplicableSymbol))
 			{
 				NamespaceLowerCase = default;
 			}
 			else if (!NamespaceLowerCase.Equals("{namespace}"))
 			{
-				throw new ArgumentException("segment index 3 (namespace) must be '{namespace}' or '-'");
+				throw new ArgumentException($"Segment index 3 (namespace) must be '{{namespace}}' or '{Constants.NotApplicableSymbol}'");
 			}
 
 			// name

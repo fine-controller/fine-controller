@@ -3,7 +3,9 @@
 	public static class Constants
 	{
 		public const string KindCamelCase = "kind";
+		public const string NotApplicableSymbol = "-";
 		public const string LabelsCamelCase = "labels";
+		public const string CurrentApiGroupSymbol = "@";
 		public const string ClusterPascalCase = "Cluster";
 		public const string MetadataCamelCase = "metadata";
 		public const string EventTypeDashCase = "event-type";

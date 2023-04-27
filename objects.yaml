@@ -1,0 +1,22 @@
+﻿apiVersion: v1
+kind: Namespace
+metadata:
+  name: example
+  labels:
+    name: example
+---
+apiVersion: example.io/v2
+kind: V2Cat
+metadata:
+  name: tom
+  namespace: example
+spec:
+  age2: 3
+  name2: tom
+---
+apiVersion: example.io/v1
+kind: V1House
+metadata:
+  name: my-house
+spec:
+  color: Red

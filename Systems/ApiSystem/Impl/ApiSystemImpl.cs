@@ -231,15 +231,19 @@ namespace Systems.ApiSystem.Impl
 
 			if (string.IsNullOrWhiteSpace(group))
 			{
-				group = "-";
+				group = Constants.NotApplicableSymbol;
 			}
 
 			if (string.IsNullOrWhiteSpace(@namespace))
 			{
-				@namespace = "-";
+				@namespace = Constants.NotApplicableSymbol;
 			}
 
-			if (!group.Equals(_appSettings.API_GROUP, StringComparison.OrdinalIgnoreCase))
+			if (group.Equals(_appSettings.API_GROUP, StringComparison.OrdinalIgnoreCase))
+			{
+				group = Constants.CurrentApiGroupSymbol;
+			}
+			else
 			{
 				var endpoint = _appData.KnownKindApiEndpoints
 					.Where(x => !string.IsNullOrWhiteSpace(x.KnownKindLowerCase))
@@ -249,9 +253,10 @@ namespace Systems.ApiSystem.Impl
 				{
 					kind = endpoint.KindLowerCase;
 				}
+				
 			}
 
-			return $"{group}/{version}/{kind}/{@namespace}/{name}";
+			return $"{group}/{version}/{kind}/{@namespace}/{name}".ToLower();
 		}
 
 		public async Task AddOrUpdateAsync(ResourceObject resourceObject, CancellationToken cancellationToken)
