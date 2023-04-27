@@ -22,7 +22,7 @@ namespace Services
 
 			services.AddSystems(appSettings);
 
-			services.AddSingleton<IResourceObjectEventEventService, ResourceObjectEventEventServiceImpl>();
+			services.AddSingleton<IResourceObjectEventService, ResourceObjectEventServiceImpl>();
 			
 			return services;
 		}

@@ -10,17 +10,17 @@ using Systems.KubernetesSystem;
 
 namespace Application.EventHandlers
 {
-	internal class ResourceObjectEventEventHandler : IResourceObjectEventHandler
+	internal class ResourceObjectEventHandler : IResourceObjectEventHandler
 	{
+		private readonly IResourceObjectEventService _resourceObjectEventService;
 		private readonly ConcurrentDictionary<string, SemaphoreSlim> _semaphores = new();
-		private readonly IResourceObjectEventEventService _resourceObjectEventEventService;
-
-		public ResourceObjectEventEventHandler
+		
+		public ResourceObjectEventHandler
 		(
-			IResourceObjectEventEventService resourceObjectEventEventService
+			IResourceObjectEventService resourceObjectEventService
 		)
 		{
-			_resourceObjectEventEventService = resourceObjectEventEventService ?? throw new ArgumentNullException(nameof(resourceObjectEventEventService));
+			_resourceObjectEventService = resourceObjectEventService ?? throw new ArgumentNullException(nameof(resourceObjectEventService));
 		}
 
 		public async Task HandleAsync(ResourceObject resourceObject, CancellationToken cancellationToken)
@@ -43,11 +43,11 @@ namespace Application.EventHandlers
 			{
 				if (resourceObject.EventType == WatchEventType.Deleted)
 				{
-					await _resourceObjectEventEventService.DeleteAsync(resourceObject, cancellationToken);
+					await _resourceObjectEventService.DeleteAsync(resourceObject, cancellationToken);
 				}
 				else
 				{
-					await _resourceObjectEventEventService.AddOrUpdateAsync(resourceObject, cancellationToken);
+					await _resourceObjectEventService.AddOrUpdateAsync(resourceObject, cancellationToken);
 				}
 			}
 			finally

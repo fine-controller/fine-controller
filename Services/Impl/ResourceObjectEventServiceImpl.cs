@@ -6,12 +6,12 @@ using Systems.ApiSystem;
 
 namespace Services.Impl
 {
-	internal class ResourceObjectEventEventServiceImpl : IResourceObjectEventEventService
+	internal class ResourceObjectEventServiceImpl : IResourceObjectEventService
 	{
 		private readonly AppData _appData;
 		private readonly IApiSystem _apiSystem;
 		
-		public ResourceObjectEventEventServiceImpl
+		public ResourceObjectEventServiceImpl
 		(
 			AppData appData,
 			IApiSystem apiSystem
