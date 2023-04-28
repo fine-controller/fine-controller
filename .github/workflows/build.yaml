@@ -77,9 +77,9 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         shell: powershell
         run: |
-          .\.sonar\scanner\dotnet-sonarscanner begin /k:"fine-kube-operator_fine-kube-operator" /o:"fine-kube-operator" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.cs.opencover.reportsPaths="**/TestResults/*/coverage.opencover.xml"
+          .\.sonar\scanner\dotnet-sonarscanner begin /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /k:"${{ env.NAME }}" /o:"${{ env.NAME }}" /d:sonar.cs.opencover.reportsPaths="**/TestResults/*/coverage.opencover.xml"
           dotnet test FineKubeOperator.sln --collect:"XPlat Code Coverage;Format=opencover"
-          .\.sonar\scanner\dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
+          .\.sonar\scanner\dotnet-sonarscanner end   /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
 
       - name: Build and push image
         if: github.ref_name == 'main'
