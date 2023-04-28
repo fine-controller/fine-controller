@@ -141,103 +141,30 @@ namespace Systems.KubernetesSystem.Impl
 				group = string.Empty;
 			}
 
-			// try origional
+			var kindWithoutVersion = apiEndpoint.KindLowerCase[apiEndpoint.VersionLowerCase.Length..];
 
-			try
+			foreach (var kindVariation in new[]
 			{
-				var kindOrigional = apiEndpoint.KindLowerCase;
-				await _kubernetesClient.Client.CustomObjects.ListClusterCustomObjectAsync(group, apiEndpoint.VersionLowerCase, kindOrigional, limit: 1, cancellationToken: cancellationToken);
-				return kindOrigional;
-			}
-			catch (HttpOperationException exception)
+				apiEndpoint.KindLowerCase,
+				kindWithoutVersion.Pluralize(),
+				kindWithoutVersion.Singularize(),
+				apiEndpoint.KindLowerCase.Pluralize(),
+				apiEndpoint.KindLowerCase.Singularize(),
+			})
 			{
-				if (exception.Response.StatusCode != HttpStatusCode.NotFound)
+				try
 				{
-					throw;
+					await _kubernetesClient.Client.CustomObjects.ListClusterCustomObjectAsync(group, apiEndpoint.VersionLowerCase, kindVariation, limit: 1, cancellationToken: cancellationToken);
+					return kindVariation;
+				}
+				catch (HttpOperationException exception)
+				{
+					if (exception.Response.StatusCode != HttpStatusCode.NotFound)
+					{
+						throw;
+					}
 				}
 			}
-
-			// try original singularized
-
-			try
-			{
-				var kindSingularized = apiEndpoint.KindLowerCase.Singularize().ToLower();
-				await _kubernetesClient.Client.CustomObjects.ListClusterCustomObjectAsync(group, apiEndpoint.VersionLowerCase, kindSingularized, limit: 1, cancellationToken: cancellationToken);
-				return kindSingularized;
-			}
-			catch (HttpOperationException exception)
-			{
-				if (exception.Response.StatusCode != HttpStatusCode.NotFound)
-				{
-					throw;
-				}
-			}
-
-			// try original pluralized
-
-			try
-			{
-				var kindPluralized = apiEndpoint.KindLowerCase.Pluralize().ToLower();
-				await _kubernetesClient.Client.CustomObjects.ListClusterCustomObjectAsync(group, apiEndpoint.VersionLowerCase, kindPluralized, limit: 1, cancellationToken: cancellationToken);
-				return kindPluralized;
-			}
-			catch (HttpOperationException exception)
-			{
-				if (exception.Response.StatusCode != HttpStatusCode.NotFound)
-				{
-					throw;
-				}
-			}
-
-			// try origional (without version)
-
-			try
-			{
-				var kindOrigionalWithoutVersion = apiEndpoint.KindLowerCase[apiEndpoint.VersionLowerCase.Length..].ToLower();
-				await _kubernetesClient.Client.CustomObjects.ListClusterCustomObjectAsync(group, apiEndpoint.VersionLowerCase, kindOrigionalWithoutVersion, limit: 1, cancellationToken: cancellationToken);
-				return kindOrigionalWithoutVersion;
-			}
-			catch (HttpOperationException exception)
-			{
-				if (exception.Response.StatusCode != HttpStatusCode.NotFound)
-				{
-					throw;
-				}
-			}
-
-			// try original singularized (without version)
-
-			try
-			{
-				var kindSingularizedWithoutVersion = apiEndpoint.KindLowerCase[apiEndpoint.VersionLowerCase.Length..].Singularize().ToLower();
-				await _kubernetesClient.Client.CustomObjects.ListClusterCustomObjectAsync(group, apiEndpoint.VersionLowerCase, kindSingularizedWithoutVersion, limit: 1, cancellationToken: cancellationToken);
-				return kindSingularizedWithoutVersion;
-			}
-			catch (HttpOperationException exception)
-			{
-				if (exception.Response.StatusCode != HttpStatusCode.NotFound)
-				{
-					throw;
-				}
-			}
-
-			// try original pluralized (without version)
-
-			try
-			{
-				var kindPluralizedWithoutVersion = apiEndpoint.KindLowerCase[apiEndpoint.VersionLowerCase.Length..].Pluralize().ToLower();
-				await _kubernetesClient.Client.CustomObjects.ListClusterCustomObjectAsync(group, apiEndpoint.VersionLowerCase, kindPluralizedWithoutVersion, limit: 1, cancellationToken: cancellationToken);
-				return kindPluralizedWithoutVersion;
-			}
-			catch (HttpOperationException exception)
-			{
-				if (exception.Response.StatusCode != HttpStatusCode.NotFound)
-				{
-					throw;
-				}
-			}
-
-			// failed
 
 			return default;
 		}
