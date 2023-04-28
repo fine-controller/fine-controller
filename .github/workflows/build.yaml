@@ -44,11 +44,6 @@ jobs:
           java-version: 11
           distribution: zulu
 
-      - name: Code checkout
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-
       - name: Cache SonarCloud packages
         uses: actions/cache@v3
         with:
@@ -70,6 +65,11 @@ jobs:
         run: |
           New-Item -Path .\.sonar\scanner -ItemType Directory
           dotnet tool update dotnet-sonarscanner --tool-path .\.sonar\scanner
+
+      - name: Code checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
       - name: Analyze using SonarCloud
         env:
