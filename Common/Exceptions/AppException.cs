@@ -3,6 +3,7 @@ using System.Runtime.Serialization;
 
 namespace Common.Exceptions
 {
+	[Serializable]
 	public class AppException : ApplicationException
 	{
 		public AppException(string message) : base(message) { }
