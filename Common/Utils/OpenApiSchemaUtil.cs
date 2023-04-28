@@ -70,7 +70,7 @@ namespace Common.Utils
 		{
 			if (az is null)
 			{
-				return default;
+				return new Dictionary<string, V1JSONSchemaProps>();
 			}
 
 			var k = new Dictionary<string, V1JSONSchemaProps>();
