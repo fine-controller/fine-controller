@@ -21,7 +21,7 @@ namespace Systems.ApiSystem.Impl
 	internal class ApiSystemImpl : IApiSystem
 	{
 		private static readonly ConcurrentDictionary<string, string> RESOURCE_OBJECT_NAMES = new();
-        protected static readonly JsonSerializerSettings JSON_SERIALIZER_SETTINGS = new() { ReferenceLoopHandling = ReferenceLoopHandling.Ignore, NullValueHandling = NullValueHandling.Ignore, Formatting = Formatting.None };
+		private static readonly JsonSerializerSettings JSON_SERIALIZER_SETTINGS = new() { ReferenceLoopHandling = ReferenceLoopHandling.Ignore, NullValueHandling = NullValueHandling.Ignore, Formatting = Formatting.None };
 
 		private readonly ILogger _logger;
 		private readonly string _baseUrl;
