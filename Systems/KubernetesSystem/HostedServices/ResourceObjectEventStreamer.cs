@@ -43,6 +43,11 @@ namespace Systems.KubernetesSystem.HostedServices
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
+			if (string.IsNullOrWhiteSpace(Group) || Group == "-")
+			{
+				Group = string.Empty;
+			}
+
 			if (string.IsNullOrWhiteSpace(Version))
 			{
 				throw new ApplicationException($"{nameof(Version)} is required");
@@ -53,10 +58,10 @@ namespace Systems.KubernetesSystem.HostedServices
 				throw new ApplicationException($"{nameof(NamePlural)} is required");
 			}
 
+			Group = Group?.Trim();
 			Version = Version.Trim();
 			NamePlural = NamePlural.Trim();
-			Group = Group?.Trim() ?? string.Empty;
-
+			
 			var isReconnecting = false;
 
 			var parallelOptions = new ParallelOptions
