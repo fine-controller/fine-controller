@@ -238,17 +238,18 @@ namespace Systems.KubernetesSystem.Impl
 		private async Task EnsureIngressNginxIsRunningAsync(CancellationToken cancellationToken)
 		{
 			var ingressNginx = "ingress-nginx";
+			var ingressNginxController = "ingress-nginx-controller";
 
-			if (await DeploymentExistsAsync(ingressNginx, ingressNginx, cancellationToken))
+			if (await DeploymentExistsAsync(ingressNginxController, ingressNginx, cancellationToken))
 			{
-				await WaitForDeploymentAsync(ingressNginx, ingressNginx, cancellationToken);
+				await WaitForDeploymentAsync(ingressNginxController, ingressNginx, cancellationToken);
 			}
 			else
 			{
-				_logger.LogInformation("Installing {Name}", ingressNginx);
+				_logger.LogInformation("Installing {Name}", ingressNginx.Titleize());
 
 				await ApplyYamlAsync(INGRESS_NGINX_YAML_FILE, ingressNginx, cancellationToken);
-				await WaitForDeploymentAsync(ingressNginx, ingressNginx, cancellationToken);
+				await WaitForDeploymentAsync(ingressNginxController, ingressNginx, cancellationToken);
 			}
 		}
 
@@ -262,7 +263,7 @@ namespace Systems.KubernetesSystem.Impl
 			}
 			else
 			{
-				_logger.LogInformation("Installing {Name}", example);
+				_logger.LogInformation("Installing {Name}", example.Titleize());
 
 				await ApplyYamlAsync(EXAMPLE_YAML_FILE, example, cancellationToken);
 				await WaitForDeploymentAsync(example, example, cancellationToken);
