@@ -1,18 +1,14 @@
 ﻿using Common.Models;
 using Common.Utils;
-using Humanizer;
 using k8s;
 using k8s.Autorest;
-using k8s.Models;
 using Microsoft.Extensions.Logging;
-using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
-using System.Xml.Linq;
 using Systems.BackgroundServiceSystem;
 using Systems.KubernetesSystem.HostedServices;
 using Systems.KubernetesSystem.Models;
@@ -70,7 +66,7 @@ namespace Systems.KubernetesSystem.Impl
 						break;
 
 					default:
-						throw new ApplicationException("Not supported");
+						throw new ApplicationException("Not Supported");
 				}
 			}
 			else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
@@ -88,7 +84,7 @@ namespace Systems.KubernetesSystem.Impl
 						break;
 
 					default:
-						throw new ApplicationException("Not supported");
+						throw new ApplicationException("Not Supported");
 				}
 			}
 			else
@@ -106,7 +102,7 @@ namespace Systems.KubernetesSystem.Impl
 						break;
 
 					default:
-						throw new ApplicationException("Not supported");
+						throw new ApplicationException("Not Supported");
 				}
 			}
 
@@ -126,7 +122,7 @@ namespace Systems.KubernetesSystem.Impl
 			}
 			else
 			{
-				_logger.LogInformation("Creating cluster {Name}", Constants.FineKubeOperator);
+				_logger.LogInformation("Creating Cluster {Name}", Constants.FineKubeOperator);
 
 				CreateClusterAsync().GetAwaiter().GetResult();
 				WaitForClusterAsync().GetAwaiter().GetResult();
@@ -256,7 +252,7 @@ namespace Systems.KubernetesSystem.Impl
 
 		private async Task WaitForClusterAsync()
 		{
-			_logger.LogInformation("Waiting for Cluster");
+			_logger.LogInformation("Waiting For Cluster");
 
 			while (!await IsClusterReadyAsync())
 			{
@@ -266,7 +262,7 @@ namespace Systems.KubernetesSystem.Impl
 
 		private async Task WaitForIngressNginxAsync()
 		{
-			_logger.LogInformation("Waiting for Ingress-Nginx");
+			_logger.LogInformation("Waiting For Ingress-Nginx");
 
 			while (!await IsIngressNginxReadyAsync())
 			{
@@ -276,7 +272,7 @@ namespace Systems.KubernetesSystem.Impl
 
 		private async Task WaitForExampleAsync()
 		{
-			_logger.LogInformation("Waiting for Example");
+			_logger.LogInformation("Waiting For Example");
 
 			while (!await IsExampleReadyAsync())
 			{

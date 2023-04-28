@@ -10,7 +10,7 @@ namespace Common.Models
 
 		[Trim]
 		[Required]
-		//TODO:[RegularExpression("")]
+		[RegularExpression(@"^(?=.{1,253}$)(?:[a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])(?:\.(?:[a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9]))*$")]
 		public string API_HOST { get; set; }
 
 		[Required]
@@ -22,7 +22,7 @@ namespace Common.Models
 
 		[Trim]
 		[Required]
-		//TODO:[RegularExpression("")]
+		[RegularExpression(@"^(/?[^?#]*)(\?[^#]*)?(#.*)?$")]
 		public string API_SPEC_PATH { get; set; }
 		
 		[Required]
@@ -30,7 +30,7 @@ namespace Common.Models
 
 		[Trim]
 		[Required]
-		//TODO:[RegularExpression("")]
+		[RegularExpression(@"^(?=.{1,253}$)(?:[a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])(?:\.(?:[a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9]))*$")]
 		public string API_GROUP { get; set; }
 	}
 }

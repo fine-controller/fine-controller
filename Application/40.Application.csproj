@@ -25,15 +25,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <EditorConfigFiles Remove="C:\Users\Fortune\source\repos\fine-kube-operator\.editorconfig" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <EditorConfigFiles Remove="C:\Users\Fortune\source\repos\fine-kube-operator\.editorconfig" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <None Include="C:\Users\Fortune\source\repos\fine-kube-operator\.editorconfig" />
+		<None Include="..\.editorconfig" Link=".editorconfig" />
 	</ItemGroup>
 
 </Project>

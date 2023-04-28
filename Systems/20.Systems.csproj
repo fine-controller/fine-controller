@@ -21,7 +21,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <EditorConfigFiles Remove="C:\Users\Fortune\source\repos\fine-kube-operator\.editorconfig" />
+		<None Include="..\.editorconfig" Link=".editorconfig" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -67,27 +67,11 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <EditorConfigFiles Remove="C:\Users\Fortune\source\repos\fine-kube-operator\.editorconfig" />
-	</ItemGroup>
-
-	<ItemGroup>
 	  <Folder Include="KubernetesSystem\Assets\KubeCtl\" />
 	</ItemGroup>
 
 	<ItemGroup>
 	  <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.5" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <EditorConfigFiles Remove="C:\Users\Fortune\source\repos\fineoperator\.editorconfig" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <EditorConfigFiles Remove="C:\Users\Fortune\source\repos\fine-kube-operator\.editorconfig" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <None Include="C:\Users\Fortune\source\repos\fine-kube-operator\.editorconfig" />
 	</ItemGroup>
 
 </Project>

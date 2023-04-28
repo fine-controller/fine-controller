@@ -81,12 +81,6 @@ namespace Common.Models
 			}
 		}
 
-		public bool IsNewerThan(ResourceObject otherResourceObject)
-		{
-			int compareResult = string.Compare(this.ResourceVersion(), otherResourceObject.ResourceVersion());
-			return compareResult > 0;
-		}
-
 		public ResourceObject(JsonObject data, WatchEventType eventType)
 		{
 			_data = data ?? throw new ArgumentNullException(nameof(data));
@@ -94,6 +88,11 @@ namespace Common.Models
 			_data[Constants.MetadataCamelCase] ??= new JsonObject();
 			_data[Constants.MetadataCamelCase][Constants.LabelsCamelCase] ??= new JsonObject();
 			_data[Constants.MetadataCamelCase][Constants.LabelsCamelCase][Constants.EventTypeDashCase] = eventType.ToString();
+		}
+
+		public bool IsNewerThan(ResourceObject otherResourceObject)
+		{
+			return string.Compare(this.ResourceVersion(), otherResourceObject.ResourceVersion()) > 0;
 		}
 	}
 }
