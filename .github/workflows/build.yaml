@@ -85,8 +85,7 @@ jobs:
         if: github.ref_name == 'main'
         run: |
           echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
-          docker build . --tag ${{ env.NAME }} --build-arg BUILD_NUMBER=${{ env.BUILD_NUMBER }}
-          docker image tag ${{ env.NAME }} ${{ env.REGISTRY_IMAGE }}:latest && docker image tag ${{ env.NAME }} ${{ env.REGISTRY_IMAGE }}:${{ env.BUILD_NUMBER }}
+          docker build . --build-arg BUILD_NUMBER=${{ env.BUILD_NUMBER }} --tag ${{ env.REGISTRY_IMAGE }}:latest --tag ${{ env.REGISTRY_IMAGE }}:${{ env.BUILD_NUMBER }}
           docker image push --all-tags ${{ env.REGISTRY_IMAGE }}
 
       - name: push image README
