@@ -16,7 +16,7 @@ on:
 jobs:
 
   build:
-    name: Build and analyze
+    name: build
     runs-on: windows-latest
     steps:
 
@@ -53,7 +53,7 @@ jobs:
           New-Item -Path .\.sonar\scanner -ItemType Directory
           dotnet tool update dotnet-sonarscanner --tool-path .\.sonar\scanner
 
-      - name: Build and analyze
+      - name: Analyze using SonarCloud
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
