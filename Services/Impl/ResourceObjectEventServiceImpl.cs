@@ -28,14 +28,12 @@ namespace Services.Impl
 				throw new ArgumentNullException(nameof(resourceObject));
 			}
 
-			_appData.WatchedResourceObjectsCurrentVersions.TryGetValue(resourceObject.LongName, out var currentResourceObject);
+			// check if resourceObject 'resourceVersion' is newer than the last
 
-			if (currentResourceObject is not null && !resourceObject.IsNewerThan(currentResourceObject))
+			if (_appData.WatchedResourceObjectsCurrentVersions.TryGetValue(resourceObject.LongName, out var currentResourceObject) && !resourceObject.IsNewerThan(currentResourceObject))
 			{
-				return; // old news
+				return;
 			}
-
-			var semaphore = new SemaphoreSlim(initialCount: 3);
 
 			// dispatch update
 

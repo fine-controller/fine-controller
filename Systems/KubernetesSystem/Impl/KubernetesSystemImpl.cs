@@ -23,7 +23,6 @@ namespace Systems.KubernetesSystem.Impl
 		protected readonly AppSettings _appSettings;
 		protected readonly KubernetesClient _kubernetesClient;
 		protected readonly IHostedServiceSystem _hostedServiceSystem;
-		protected readonly AppCancellationToken _appCancellationToken;
 		protected readonly IServiceProvider<ResourceObjectEventStreamer> _resourceObjectEventStreamerProvider;
 		
 		public KubernetesSystemImpl
@@ -32,7 +31,6 @@ namespace Systems.KubernetesSystem.Impl
 			KubernetesClient kubernetesClient,
 			ILogger<KubernetesSystemImpl> logger,
 			IHostedServiceSystem hostedServiceSystem,
-			AppCancellationToken appCancellationToken,
 			IServiceProvider<ResourceObjectEventStreamer> resourceObjectEventStreamerProvider
 		)
 		{
@@ -40,7 +38,6 @@ namespace Systems.KubernetesSystem.Impl
 			_appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
 			_kubernetesClient = kubernetesClient ?? throw new ArgumentNullException(nameof(kubernetesClient));
 			_hostedServiceSystem = hostedServiceSystem ?? throw new ArgumentNullException(nameof(hostedServiceSystem));
-			_appCancellationToken = appCancellationToken ?? throw new ArgumentNullException(nameof(appCancellationToken));
 			_resourceObjectEventStreamerProvider = resourceObjectEventStreamerProvider ?? throw new ArgumentNullException(nameof(resourceObjectEventStreamerProvider));
 
 			// client
@@ -53,6 +50,11 @@ namespace Systems.KubernetesSystem.Impl
 
 		private string GetResourceObjectEventStreamerName(string group, string version, string namePlural)
 		{
+			if (string.IsNullOrWhiteSpace(group))
+			{
+				group = "-";
+			}
+
 			if (string.IsNullOrWhiteSpace(version))
 			{
 				throw new ArgumentNullException(nameof(version));
@@ -62,12 +64,21 @@ namespace Systems.KubernetesSystem.Impl
 			{
 				throw new ArgumentNullException(nameof(namePlural));
 			}
+
+			group = group?.Trim();
+			version = version.Trim();
+			namePlural = namePlural.Trim();
 
 			return $"{nameof(ResourceObjectEventStreamer)}:{NameUtil.GetKindLongName(group, version, namePlural)}";
 		}
 
 		public async Task StartStreamingResourceObjectEventsAsync(string group, string version, string namePlural, CancellationToken cancellationToken)
 		{
+			if (string.IsNullOrWhiteSpace(group))
+			{
+				group = "-";
+			}
+
 			if (string.IsNullOrWhiteSpace(version))
 			{
 				throw new ArgumentNullException(nameof(version));
@@ -78,10 +89,10 @@ namespace Systems.KubernetesSystem.Impl
 				throw new ArgumentNullException(nameof(namePlural));
 			}
 
+			group = group?.Trim();
 			version = version.Trim();
 			namePlural = namePlural.Trim();
-			group = group?.Trim() ?? string.Empty;
-
+			
 			var resourceObjectEventStreamer = _resourceObjectEventStreamerProvider.GetRequiredService();
 			var resourceObjectEventStreamerName = GetResourceObjectEventStreamerName(group, version, namePlural);
 			
@@ -118,6 +129,11 @@ namespace Systems.KubernetesSystem.Impl
 
 		public async Task<string> GetKnownKindForApiEndpointAsync(ApiEndpoint apiEndpoint, CancellationToken cancellationToken)
 		{
+			if (apiEndpoint is null)
+			{
+				throw new ArgumentNullException(nameof(apiEndpoint));
+			}
+
 			var group = apiEndpoint.GroupLowerCase?.Trim();
 
 			if (string.IsNullOrWhiteSpace(group) || group == "-")

@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Threading.Tasks;
 using Systems.BackgroundServiceSystem;
 using Systems.KubernetesSystem.HostedServices;
@@ -41,7 +42,6 @@ namespace Systems.KubernetesSystem.Impl
 			kubernetesClient,
 			logger,
 			hostedServiceSystem,
-			appCancellationToken,
 			resourceObjectEventStreamerProvider
 		)
 		{
@@ -110,27 +110,27 @@ namespace Systems.KubernetesSystem.Impl
 
 			if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
 			{
-				ProcessUtil.ExecuteAsync("chmod", new[] { "+x", _kindExecutableFile }, _appCancellationToken.Token).GetAwaiter().GetResult();
-				ProcessUtil.ExecuteAsync("chmod", new[] { "+x", _kubeCtlExecutableFile }, _appCancellationToken.Token).GetAwaiter().GetResult();
+				ProcessUtil.ExecuteAsync("chmod", new[] { "+x", _kindExecutableFile }, appCancellationToken.Token).GetAwaiter().GetResult();
+				ProcessUtil.ExecuteAsync("chmod", new[] { "+x", _kubeCtlExecutableFile }, appCancellationToken.Token).GetAwaiter().GetResult();
 			}
 
 			// Create Kind cluster (if it does not already exist)
 
-			if (IsClusterReadyAsync().GetAwaiter().GetResult())
+			if (IsClusterReadyAsync(appCancellationToken.Token).GetAwaiter().GetResult())
 			{
-				WaitForClusterAsync().GetAwaiter().GetResult();
+				WaitForClusterAsync(appCancellationToken.Token).GetAwaiter().GetResult();
 			}
 			else
 			{
 				_logger.LogInformation("Creating Cluster {Name}", Constants.FineKubeOperator);
 
-				CreateClusterAsync().GetAwaiter().GetResult();
-				WaitForClusterAsync().GetAwaiter().GetResult();
+				CreateClusterAsync(appCancellationToken.Token).GetAwaiter().GetResult();
+				WaitForClusterAsync(appCancellationToken.Token).GetAwaiter().GetResult();
 			}
 
 			// Create kubernetes client
 
-			var kubeConfigYaml = GetClusterKubeConfigAsync().GetAwaiter().GetResult();
+			var kubeConfigYaml = GetClusterKubeConfigAsync(appCancellationToken.Token).GetAwaiter().GetResult();
 			using var kubeConfigYamlStream = StreamUtils.FromString(kubeConfigYaml);
 			var kubeConfig = KubernetesClientConfiguration.LoadKubeConfig(kubeConfigYamlStream);
 			var kubeClientConfig = KubernetesClientConfiguration.BuildConfigFromConfigObject(kubeConfig);
@@ -140,30 +140,30 @@ namespace Systems.KubernetesSystem.Impl
 
 			// Install ingress-nginx (if it's not already installed)
 
-			if (IsIngressNginxInstalledAsync().GetAwaiter().GetResult())
+			if (IsIngressNginxInstalledAsync(appCancellationToken.Token).GetAwaiter().GetResult())
 			{
-				WaitForIngressNginxAsync().GetAwaiter().GetResult();
+				WaitForIngressNginxAsync(appCancellationToken.Token).GetAwaiter().GetResult();
 			}
 			else
 			{
 				_logger.LogInformation("Installing Ingress-Nginx");
 
-				InstallIngressNginxAsync().GetAwaiter().GetResult();
-				WaitForIngressNginxAsync().GetAwaiter().GetResult();
+				InstallIngressNginxAsync(appCancellationToken.Token).GetAwaiter().GetResult();
+				WaitForIngressNginxAsync(appCancellationToken.Token).GetAwaiter().GetResult();
 			}
 
 			// Install example (if it's not already installed)
 
-			if (IsExampleInstalledAsync().GetAwaiter().GetResult())
+			if (IsExampleInstalledAsync(appCancellationToken.Token).GetAwaiter().GetResult())
 			{
-				WaitForExampleAsync().GetAwaiter().GetResult();
+				WaitForExampleAsync(appCancellationToken.Token).GetAwaiter().GetResult();
 			}
 			else
 			{
 				_logger.LogInformation("Installing Example");
 
-				InstallExampleAsync().GetAwaiter().GetResult();
-				WaitForExampleAsync().GetAwaiter().GetResult();
+				InstallExampleAsync(appCancellationToken.Token).GetAwaiter().GetResult();
+				WaitForExampleAsync(appCancellationToken.Token).GetAwaiter().GetResult();
 			}
 
 			// Print KubeConfig
@@ -171,11 +171,11 @@ namespace Systems.KubernetesSystem.Impl
 			_logger.LogInformation("Cluster KubeConfig : \n\n {KubeConfigYaml}", kubeConfigYaml);
 		}
 
-		private async Task<bool> IsDeploymentInstalledAsync(string name, string @namespace)
+		private async Task<bool> IsDeploymentInstalledAsync(string name, string @namespace, CancellationToken cancellationToken)
 		{
 			try
 			{
-				var deployment = await _kubernetesClient.Client.AppsV1.ReadNamespacedDeploymentAsync(name, @namespace, cancellationToken: _appCancellationToken.Token);
+				var deployment = await _kubernetesClient.Client.AppsV1.ReadNamespacedDeploymentAsync(name, @namespace, cancellationToken: cancellationToken);
 				return deployment is not null;
 			}
 			catch (HttpOperationException httpOperationException) when (httpOperationException.Response.StatusCode == HttpStatusCode.NotFound)
@@ -184,11 +184,11 @@ namespace Systems.KubernetesSystem.Impl
 			}
 		}
 
-		private async Task<bool> IsDeploymentReadyAsync(string name, string @namespace)
+		private async Task<bool> IsDeploymentReadyAsync(string name, string @namespace, CancellationToken cancellationToken)
 		{
 			try
 			{
-				var deployment = await _kubernetesClient.Client.AppsV1.ReadNamespacedDeploymentAsync(name, @namespace, cancellationToken: _appCancellationToken.Token);
+				var deployment = await _kubernetesClient.Client.AppsV1.ReadNamespacedDeploymentAsync(name, @namespace, cancellationToken: cancellationToken);
 				return deployment.Status.ReadyReplicas == deployment.Status.Replicas;
 			}
 			catch (HttpOperationException httpOperationException) when (httpOperationException.Response.StatusCode == HttpStatusCode.NotFound)
@@ -197,7 +197,7 @@ namespace Systems.KubernetesSystem.Impl
 			}
 		}
 
-		private async Task ApplyYamlAsync(string yamlFilePath, string @namespace = null)
+		private async Task ApplyYamlAsync(string yamlFilePath, string @namespace, CancellationToken cancellationToken)
 		{
 			var args = new List<string> { "apply", "-f", yamlFilePath };
 			
@@ -206,83 +206,83 @@ namespace Systems.KubernetesSystem.Impl
 				args.AddRange(new[] { "-n", @namespace });
 			}
 
-			await ProcessUtil.ExecuteAsync(_kubeCtlExecutableFile, args, _appCancellationToken.Token);
+			await ProcessUtil.ExecuteAsync(_kubeCtlExecutableFile, args, cancellationToken);
 		}
 
-		private async Task<bool> IsClusterReadyAsync()
+		private async Task<bool> IsClusterReadyAsync(CancellationToken cancellationToken)
 		{
-			var result = await ProcessUtil.ExecuteAsync(_kindExecutableFile, new[] { "get", "clusters" }, _appCancellationToken.Token);
+			var result = await ProcessUtil.ExecuteAsync(_kindExecutableFile, new[] { "get", "clusters" }, cancellationToken);
 			return result.Trim().Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).Any(x => x.Equals(Constants.FineKubeOperator));
 		}
 
-		private async Task<bool> IsIngressNginxInstalledAsync()
+		private async Task<bool> IsIngressNginxInstalledAsync(CancellationToken cancellationToken)
 		{
-			return await IsDeploymentInstalledAsync("ingress-nginx-controller", "ingress-nginx");
+			return await IsDeploymentInstalledAsync("ingress-nginx-controller", "ingress-nginx", cancellationToken);
 		}
 
-		private async Task<bool> IsIngressNginxReadyAsync()
+		private async Task<bool> IsIngressNginxReadyAsync(CancellationToken cancellationToken)
 		{
-			return await IsDeploymentReadyAsync("ingress-nginx-controller", "ingress-nginx");
+			return await IsDeploymentReadyAsync("ingress-nginx-controller", "ingress-nginx", cancellationToken);
 		}
 
-		private async Task<bool> IsExampleInstalledAsync()
+		private async Task<bool> IsExampleInstalledAsync(CancellationToken cancellationToken)
 		{
-			return await IsDeploymentInstalledAsync("example", "example");
+			return await IsDeploymentInstalledAsync("example", "example", cancellationToken);
 		}
 
-		private async Task<bool> IsExampleReadyAsync()
+		private async Task<bool> IsExampleReadyAsync(CancellationToken cancellationToken)
 		{
-			return await IsDeploymentReadyAsync("example", "example");
+			return await IsDeploymentReadyAsync("example", "example", cancellationToken);
 		}
 
-		private async Task CreateClusterAsync()
+		private async Task CreateClusterAsync(CancellationToken cancellationToken)
 		{
-			await ProcessUtil.ExecuteAsync(_kindExecutableFile, new[] { "create", "cluster", "--name", Constants.FineKubeOperator, "--config", CLUSTER_CONFIGURATION_YAML_FILE }, _appCancellationToken.Token);
+			await ProcessUtil.ExecuteAsync(_kindExecutableFile, new[] { "create", "cluster", "--name", Constants.FineKubeOperator, "--config", CLUSTER_CONFIGURATION_YAML_FILE }, cancellationToken);
 		}
 
-		private async Task InstallIngressNginxAsync()
+		private async Task InstallIngressNginxAsync(CancellationToken cancellationToken)
 		{
-			await ApplyYamlAsync(INGRESS_NGINX_YAML_FILE, "ingress-nginx");
+			await ApplyYamlAsync(INGRESS_NGINX_YAML_FILE, "ingress-nginx", cancellationToken);
 		}
 
-		private async Task InstallExampleAsync()
+		private async Task InstallExampleAsync(CancellationToken cancellationToken)
 		{
-			await ApplyYamlAsync(EXAMPLE_YAML_FILE, "example");
+			await ApplyYamlAsync(EXAMPLE_YAML_FILE, "example", cancellationToken);
 		}
 
-		private async Task WaitForClusterAsync()
+		private async Task WaitForClusterAsync(CancellationToken cancellationToken)
 		{
 			_logger.LogInformation("Waiting For Cluster");
 
-			while (!await IsClusterReadyAsync())
+			while (!await IsClusterReadyAsync(cancellationToken))
 			{
-				await Task.Delay(2000);
+				await Task.Delay(2000, cancellationToken);
 			}
 		}
 
-		private async Task WaitForIngressNginxAsync()
+		private async Task WaitForIngressNginxAsync(CancellationToken cancellationToken)
 		{
 			_logger.LogInformation("Waiting For Ingress-Nginx");
 
-			while (!await IsIngressNginxReadyAsync())
+			while (!await IsIngressNginxReadyAsync(cancellationToken))
 			{
-				await Task.Delay(2000);
+				await Task.Delay(2000, cancellationToken);
 			}
 		}
 
-		private async Task WaitForExampleAsync()
+		private async Task WaitForExampleAsync(CancellationToken cancellationToken)
 		{
 			_logger.LogInformation("Waiting For Example");
 
-			while (!await IsExampleReadyAsync())
+			while (!await IsExampleReadyAsync(cancellationToken))
 			{
-				await Task.Delay(2000);
+				await Task.Delay(2000, cancellationToken);
 			}
 		}
 
-		private async Task<string> GetClusterKubeConfigAsync()
+		private async Task<string> GetClusterKubeConfigAsync(CancellationToken cancellationToken)
 		{
-			return await ProcessUtil.ExecuteAsync(_kindExecutableFile, new[] { "get", "kubeconfig", "--name", Constants.FineKubeOperator }, _appCancellationToken.Token);
+			return await ProcessUtil.ExecuteAsync(_kindExecutableFile, new[] { "get", "kubeconfig", "--name", Constants.FineKubeOperator }, cancellationToken);
 		}
 	}
 }
