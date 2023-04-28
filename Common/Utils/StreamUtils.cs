@@ -14,9 +14,12 @@ namespace Common.Utils
 
 			var stream = new MemoryStream();
 			var writer = new StreamWriter(stream);
+			
 			writer.Write(value);
 			writer.Flush();
+
 			stream.Position = 0;
+
 			return stream;
 		}
 	}

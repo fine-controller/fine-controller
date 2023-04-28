@@ -16,7 +16,7 @@ namespace Common.Utils
 				throw new ArgumentNullException(nameof(targetFilePath));
 			}
 
-			if (arguments is null)  // empty/whitespace acceptable
+			if (arguments is null)
 			{
 				throw new ArgumentNullException(nameof(arguments));
 			}
