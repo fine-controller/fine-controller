@@ -1,5 +1,5 @@
-﻿using Newtonsoft.Json;
-using RestSharp;
+﻿using RestSharp;
+using System.Text.Json;
 
 namespace Common.Utils
 {
@@ -7,7 +7,7 @@ namespace Common.Utils
 	{
 		public static T Deserialize<T>(this IRestResponse response)
 		{
-			return JsonConvert.DeserializeObject<T>(response.Content);
+			return JsonSerializer.Deserialize<T>(response.Content);
 		}
 	}
 }

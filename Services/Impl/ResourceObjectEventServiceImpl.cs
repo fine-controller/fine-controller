@@ -1,4 +1,5 @@
 ﻿using Common.Models;
+using k8s.Models;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -30,7 +31,12 @@ namespace Services.Impl
 
 			// check if resourceObject 'resourceVersion' is newer than the last
 
-			if (_appData.WatchedResourceObjectsCurrentVersions.TryGetValue(resourceObject.LongName, out var currentResourceObject) && !resourceObject.IsNewerThan(currentResourceObject))
+			if (_appData.WatchedResourceObjectsCurrentResourceVersions.TryGetValue(resourceObject.LongName, out var currentResourceVersion))
+			{
+				return;
+			}
+
+			if (!string.IsNullOrWhiteSpace(currentResourceVersion) && !resourceObject.IsNewerThan(currentResourceVersion))
 			{
 				return;
 			}
@@ -41,7 +47,7 @@ namespace Services.Impl
 
 			// incoming is now the latest
 
-			_appData.WatchedResourceObjectsCurrentVersions[resourceObject.LongName] = resourceObject;
+			_appData.WatchedResourceObjectsCurrentResourceVersions[resourceObject.LongName] = resourceObject.ResourceVersion();
 		}
 
 		public async Task DeleteAsync(ResourceObject resourceObject, CancellationToken cancellationToken)
@@ -57,7 +63,7 @@ namespace Services.Impl
 
 			// clean up
 
-			_appData.WatchedResourceObjectsCurrentVersions.Remove(resourceObject.LongName);
+			_appData.WatchedResourceObjectsCurrentResourceVersions.Remove(resourceObject.LongName);
 		}
 	}
 }

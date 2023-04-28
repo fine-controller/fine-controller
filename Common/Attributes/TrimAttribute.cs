@@ -6,17 +6,56 @@ namespace Common.Attributes
 	{
 		protected override ValidationResult IsValid(object value, ValidationContext validationContext)
 		{
-			if (value is string valueStr && valueStr is not null)
+			if (value is null)
 			{
-				var property = validationContext.ObjectType.GetProperty(validationContext.MemberName);
-
-				if (property.CanWrite)
-				{
-					property.SetValue(validationContext.ObjectInstance, valueStr.Trim());
-				}
+				return ValidationResult.Success;
 			}
 
-			return ValidationResult.Success; // always
+			if (validationContext is null)
+			{
+				return ValidationResult.Success;
+			}
+
+			if (validationContext.ObjectType is null)
+			{
+				return ValidationResult.Success;
+			}
+
+			if (validationContext.ObjectInstance is null)
+			{
+				return ValidationResult.Success;
+			}
+
+			if (string.IsNullOrWhiteSpace(validationContext?.MemberName))
+			{
+				return ValidationResult.Success;
+			}
+
+			if (value is not string valueStr)
+			{
+				return ValidationResult.Success;
+			}
+
+			if (string.IsNullOrWhiteSpace(valueStr))
+			{
+				return ValidationResult.Success;
+			}
+
+			var property = validationContext.ObjectType.GetProperty(validationContext.MemberName);
+
+			if (property is null)
+			{
+				return ValidationResult.Success;
+			}
+
+			if (!property.CanWrite)
+			{
+				return ValidationResult.Success;
+			}
+
+			property.SetValue(validationContext.ObjectInstance, valueStr.Trim());
+
+			return ValidationResult.Success;
 		}
 	}
 }

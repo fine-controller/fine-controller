@@ -6,6 +6,6 @@ namespace Systems.KubernetesSystem
 {
 	public interface IResourceObjectEventHandler
     {
-        public Task HandleAsync(ResourceObject resourceObjectEvent, CancellationToken cancellationToken);
+        public Task HandleAsync(ResourceObject resourceObject, CancellationToken cancellationToken);
     }
 }

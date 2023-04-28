@@ -125,7 +125,7 @@ namespace Systems.KubernetesSystem.HostedServices
 						{
 							if (eventType == WatchEventType.Error)
 							{
-								// TODO : How do i know it's GONE
+								// How do i know for sure it's GONE
 								_logger.LogError("{LogTag} : Error (GONE suspected)", logTag);
 								connect(); // reconnect
 								return;
@@ -181,7 +181,7 @@ namespace Systems.KubernetesSystem.HostedServices
 			await Task.CompletedTask;
         }
 
-		private class Listener : IDisposable
+		private sealed class Listener : IDisposable
 		{
 			private readonly string _logTag;
 			private readonly ILogger _logger;
@@ -201,6 +201,8 @@ namespace Systems.KubernetesSystem.HostedServices
 
 			public void Dispose()
 			{
+				GC.SuppressFinalize(this);
+
 				try
 				{
 					Watcher?.Dispose();

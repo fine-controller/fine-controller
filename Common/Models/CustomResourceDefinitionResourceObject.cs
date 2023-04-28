@@ -1,14 +1,12 @@
 ﻿using Common.Utils;
 using k8s.Models;
-using Newtonsoft.Json;
 using System;
+using System.Text.Json;
 
 namespace Common.Models
 {
 	public class CustomResourceDefinitionResourceObject : V1CustomResourceDefinition
 	{
-		protected static readonly JsonSerializerSettings JSON_SERIALIZER_SETTINGS = new() { ReferenceLoopHandling = ReferenceLoopHandling.Ignore, NullValueHandling = NullValueHandling.Ignore, Formatting = Formatting.None };
-
 		public bool IsNamespaced
 		{
 			get
@@ -32,8 +30,8 @@ namespace Common.Models
 				throw new ArgumentNullException(nameof(v1customResourceDefinition));
 			}
 
-			var v1customResourceDefinitionJson = JsonConvert.SerializeObject(v1customResourceDefinition, JSON_SERIALIZER_SETTINGS);
-			var customResourceDefinitionResourceObject = JsonConvert.DeserializeObject<CustomResourceDefinitionResourceObject>(v1customResourceDefinitionJson, JSON_SERIALIZER_SETTINGS);
+			var v1customResourceDefinitionJson = JsonSerializer.Serialize(v1customResourceDefinition);
+			var customResourceDefinitionResourceObject = JsonSerializer.Deserialize<CustomResourceDefinitionResourceObject>(v1customResourceDefinitionJson);
 
 			if (string.IsNullOrWhiteSpace(customResourceDefinitionResourceObject.ApiVersion))
 			{

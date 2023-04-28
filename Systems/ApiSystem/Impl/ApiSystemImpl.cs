@@ -6,7 +6,6 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 using Microsoft.OpenApi.Readers;
-using Newtonsoft.Json;
 using RestSharp;
 using System;
 using System.Collections.Concurrent;
@@ -21,8 +20,7 @@ namespace Systems.ApiSystem.Impl
 	internal class ApiSystemImpl : IApiSystem
 	{
 		private static readonly ConcurrentDictionary<string, string> RESOURCE_OBJECT_NAMES = new();
-		private static readonly JsonSerializerSettings JSON_SERIALIZER_SETTINGS = new() { ReferenceLoopHandling = ReferenceLoopHandling.Ignore, NullValueHandling = NullValueHandling.Ignore, Formatting = Formatting.None };
-
+		
 		private readonly ILogger _logger;
 		private readonly string _baseUrl;
 		private readonly AppData _appData;
@@ -191,7 +189,6 @@ namespace Systems.ApiSystem.Impl
 				var kind = apiSchemaKeyAndValue.Key;
 				var definitionVersion = putEndpoint.VersionLowerCase;
 				var definition = new CustomResourceDefinitionResourceObject();
-				var apiSchemaJson = JsonConvert.SerializeObject(apiSchemaKeyAndValue.Value, JSON_SERIALIZER_SETTINGS);
 
 				definition.Kind = Constants.CustomResourceDefinitionPascalCase;
 				definition.ApiVersion = Constants.ApiExtensionsK8sIoV1LowerCase;

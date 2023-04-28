@@ -7,7 +7,7 @@ namespace Common.Models
 	public class AppData
 	{
 		public IEnumerable<ApiEndpoint> KnownKindApiEndpoints { get; set; } = Array.Empty<ApiEndpoint>();
-		public IDictionary<string, ResourceObject> WatchedResourceObjectsCurrentVersions { get; } = new ConcurrentDictionary<string, ResourceObject>();
+		public IDictionary<string, string> WatchedResourceObjectsCurrentResourceVersions { get; } = new ConcurrentDictionary<string, string>();
 		public IEnumerable<CustomResourceDefinitionResourceObject> CustomResourceDefinitions { get; set; } = Array.Empty<CustomResourceDefinitionResourceObject>();
 	}
 }

@@ -1,11 +1,8 @@
 ﻿using k8s.Models;
 using Microsoft.OpenApi.Any;
-using Microsoft.OpenApi.Extensions;
 using Microsoft.OpenApi.Models;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 
 namespace Common.Utils
 {
@@ -20,11 +17,9 @@ namespace Common.Utils
 
 			var k = new V1JSONSchemaProps();
 
-			//k.Id = api.Id;
 			k.Type = api.Type;
 			k.Title = api.Title;
 			k.Format = api.Format;
-			//k.Schema = api.Schema;
 			k.Example = api.Example;
 			k.Pattern = api.Pattern;
 			k.Not = Convert(api.Not);
@@ -35,35 +30,23 @@ namespace Common.Utils
 			k.MinLength = api.MinLength;
 			k.Items = Convert(api.Items);
 			k.Description = api.Description;
+			k.UniqueItems = api.UniqueItems;
 			k.Maximum = Convert(api.Maximum);
 			k.Minimum = Convert(api.Minimum);
-			//k.DefaultProperty = api.Default;
-			//k.Definitions = api.Definitions;
-			k.UniqueItems = api.UniqueItems;
 			k.Required = api.Required?.ToList();
-			//k.Dependencies = api.Dependencies;
 			k.MaxProperties = api.MaxProperties;
 			k.MinProperties = api.MinProperties;
 			k.MultipleOf = Convert(api.MultipleOf);
 			k.Properties = Convert(api.Properties);
+			k.DefaultProperty = Convert(api.Default);
 			k.ExclusiveMaximum = api.ExclusiveMaximum;
 			k.ExclusiveMinimum = api.ExclusiveMinimum;
 			k.ExternalDocs = Convert(api.ExternalDocs);
-			//k.RefProperty = api.Reference?.ReferenceV3;
-			//k.PatternProperties = api.PatternProperties;
-			//k.XKubernetesMapType = api.XKubernetesMapType;
-			//k.XKubernetesListType = api.XKubernetesListType;
-			//k.AdditionalProperties = api.AdditionalProperties;
 			k.AdditionalItems = Convert(api.AdditionalProperties);
 			k.AllOf = api.AllOf?.Select(x => Convert(x)).ToList();
 			k.AnyOf = api.AnyOf?.Select(x => Convert(x)).ToList();
 			k.OneOf = api.OneOf?.Select(x => Convert(x)).ToList();
 			k.EnumProperty = api.Enum?.Select(x => Convert(x))?.ToList();
-			//k.XKubernetesIntOrString = api.XKubernetesIntOrString;
-			//k.XKubernetesListMapKeys = api.XKubernetesListMapKeys;
-			//k.XKubernetesValidations = api.XKubernetesValidations;
-			//k.XKubernetesEmbeddedResource = api.XKubernetesEmbeddedResource;
-			//k.XKubernetesPreserveUnknownFields = api.XKubernetesPreserveUnknownFields;
 
 			return k;
 		}

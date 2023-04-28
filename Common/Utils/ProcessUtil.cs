@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Common.Utils
 {
-	public class ProcessUtil
+	public static class ProcessUtil
 	{
 		public static async Task<string> ExecuteAsync(string targetFilePath, IEnumerable<string> arguments, CancellationToken cancellationToken, Action<string> standardOutputCallback = null, Action<string> errorOutputCallback = null)
 		{

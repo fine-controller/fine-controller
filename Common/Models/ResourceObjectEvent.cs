@@ -1,7 +1,6 @@
 ﻿using Common.Utils;
 using k8s;
 using k8s.Models;
-using Newtonsoft.Json;
 using System;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -10,8 +9,6 @@ namespace Common.Models
 {
 	public class ResourceObject : IKubernetesObject, IMetadata<V1ObjectMeta>
 	{
-		protected static readonly JsonSerializerSettings JSON_SERIALIZER_SETTINGS = new() { ReferenceLoopHandling = ReferenceLoopHandling.Ignore, NullValueHandling = NullValueHandling.Ignore, Formatting = Formatting.None };
-
 		private readonly JsonObject _data;
 
 		public string Kind
@@ -46,7 +43,7 @@ namespace Common.Models
 			}
 			set
 			{
-				_data[Constants.MetadataCamelCase] = JsonNode.Parse(JsonConvert.SerializeObject(value, JSON_SERIALIZER_SETTINGS));
+				_data[Constants.MetadataCamelCase] = JsonNode.Parse(JsonSerializer.Serialize(value));
 			}
 		}
 
@@ -90,9 +87,9 @@ namespace Common.Models
 			_data[Constants.MetadataCamelCase][Constants.LabelsCamelCase][Constants.EventTypeDashCase] = eventType.ToString();
 		}
 
-		public bool IsNewerThan(ResourceObject otherResourceObject)
+		public bool IsNewerThan(string resourceVersion)
 		{
-			return string.Compare(this.ResourceVersion(), otherResourceObject.ResourceVersion()) > 0;
+			return string.Compare(this.ResourceVersion(), resourceVersion) > 0;
 		}
 	}
 }
