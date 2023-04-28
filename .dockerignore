@@ -24,5 +24,6 @@
 **/appSettings.*.json
 **/launchSettings.json
 **/KubernetesSystem/Assets
+**/TestResults
 LICENSE
 README.md
