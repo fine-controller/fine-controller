@@ -41,6 +41,18 @@ namespace Systems.KubernetesSystem.HostedServices
 			_ = kubernetesClient.Client ?? throw new ArgumentException($"{nameof(kubernetesClient.Client)} is required", nameof(kubernetesClient));
 		}
 
+		private void DisposeListener()
+		{
+			try
+			{
+				_listener?.Dispose();
+			}
+			catch (Exception exception)
+			{
+				_logger.LogWarning(exception, "Failed to dispose listener");
+			}
+		}
+
         public async Task StartAsync(CancellationToken cancellationToken)
         {
 			if (string.IsNullOrWhiteSpace(Group) || Group == "-")
@@ -78,23 +90,34 @@ namespace Systems.KubernetesSystem.HostedServices
 				{
 					try
 					{
+						// exit if cancellation token is cancelled
+
 						if (cancellationToken.IsCancellationRequested)
 						{
 							_logger.LogInformation("{LogTag} : Exiting", logTag);
 							return;
 						}
 
+						// delay if reconnecting
+
 						if (isReconnecting)
 						{
 							await Task.Delay(2000, cancellationToken);
 						}
+						else
+						{
+							isReconnecting = true; // it's all reconnections from now on
+						}
+
+						// dispose current listener (if any) and create a new one
+
+						DisposeListener();
+						_listener = new(logTag, _logger);
+
+						// start streaming
 
 						_logger.LogInformation("{LogTag} : {Message}", logTag, "Streaming");
 
-						isReconnecting = true; // from this moment onwards it's reconnections
-
-						_listener?.Dispose();
-						_listener = new(logTag, _logger);
 						_listener.HttpOperationResponse = await _kubernetesClient.Client.CustomObjects.ListClusterCustomObjectWithHttpMessagesAsync(Group, Version, NamePlural, allowWatchBookmarks: false, watch: true, cancellationToken: cancellationToken);
 						
 						_listener.Watcher = _listener.HttpOperationResponse.Watch((WatchEventType eventType, object eventData) =>
@@ -103,7 +126,7 @@ namespace Systems.KubernetesSystem.HostedServices
 							{
 								// TODO : How do i know it's GONE
 								_logger.LogError("{LogTag} : Error (GONE suspected)", logTag);
-								connect();
+								connect(); // reconnect
 								return;
 							}
 
@@ -131,16 +154,18 @@ namespace Systems.KubernetesSystem.HostedServices
 						onClosed: () =>
 						{
 							_logger.LogWarning("{LogTag} : Closed", logTag);
-							connect();
+							connect();// reconnect
 						});
 					}
 					catch (Exception exception)
 					{
 						_logger.LogError(exception, "{LogTag} : Error", logTag);
-						connect();
+						connect(); // reconnect
 					}
 				}, cancellationToken);
 			}
+
+			// connect for the first time
 
 			connect();
 
@@ -151,15 +176,7 @@ namespace Systems.KubernetesSystem.HostedServices
 
         public async Task StopAsync(CancellationToken cancellationToken)
         {
-			try
-			{
-				_listener?.Dispose();
-			}
-			catch (Exception exception)
-			{
-				_logger.LogWarning(exception, "Failed to dispose listener");
-			}
-
+			DisposeListener();
 			await Task.CompletedTask;
         }
 
