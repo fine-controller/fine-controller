@@ -38,6 +38,8 @@
 		</PackageReference>
 		<PackageReference Include="RestSharp.Serializers.SystemTextJson" Version="106.15.0" />
 		<PackageReference Include="Microsoft.OpenApi.Readers" Version="1.6.3" />
+		<PackageReference Include="Shouldly" Version="4.2.1" />
+		<PackageReference Include="Shouldly.EqualityExtensions" Version="1.1.1" />
 	</ItemGroup>
 
 </Project>

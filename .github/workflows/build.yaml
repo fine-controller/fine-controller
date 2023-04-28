@@ -31,6 +31,9 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Install Coverlet
+        run: dotnet tool install --global coverlet.console
+
       - name: Cache SonarCloud packages
         uses: actions/cache@v3
         with:
@@ -59,6 +62,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         shell: powershell
         run: |
-          .\.sonar\scanner\dotnet-sonarscanner begin /k:"fine-kube-operator_fine-kube-operator" /o:"fine-kube-operator" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io"
-          dotnet test FineKubeOperator.sln
+          .\.sonar\scanner\dotnet-sonarscanner begin /k:"fine-kube-operator_fine-kube-operator" /o:"fine-kube-operator" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.cs.opencover.reportsPaths=coverage.xml
+          dotnet build --no-incremental FineKubeOperator.sln
+          coverlet FineKubeOperator.sln --target "dotnet" --targetargs "test --no-build" -f=opencover -o="coverage.xml"
           .\.sonar\scanner\dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
