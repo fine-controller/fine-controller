@@ -15,7 +15,7 @@ namespace Common.Utils
 
 	public class ServiceProvider<T> : IServiceProvider<T>
 	{
-		public IServiceProvider _serviceProvider;
+		private readonly IServiceProvider _serviceProvider;
 
 		public ServiceProvider
 		(
