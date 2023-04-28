@@ -103,6 +103,16 @@ namespace Systems.ApiSystem.Impl
 						break;
 				}
 
+				if (openApiDocument is null)
+				{
+					throw new ApplicationException("Failed to read spec : openApiDocument is null");
+				}
+
+				if (openApiDiagnostic is null)
+				{
+					throw new ApplicationException("Failed to read spec : openApiDiagnostic is null");
+				}
+
 				if (openApiDiagnostic.SpecificationVersion != Microsoft.OpenApi.OpenApiSpecVersion.OpenApi3_0)
 				{
 					throw new ApplicationException("Specification is not version 3");
