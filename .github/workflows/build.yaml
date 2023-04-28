@@ -82,7 +82,7 @@ jobs:
       #     .\.sonar\scanner\dotnet-sonarscanner end   /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
 
       - name: Build and push image
-        shell: powershell
+        #shell: powershell
         if: github.ref_name == 'main'
         run: |
           echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u fortunen --password-stdin
