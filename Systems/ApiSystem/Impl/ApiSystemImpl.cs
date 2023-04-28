@@ -1,4 +1,5 @@
-﻿using Common.Models;
+﻿using Common.Exceptions;
+using Common.Models;
 using Common.Utils;
 using Humanizer;
 using k8s.Models;
@@ -86,7 +87,7 @@ namespace Systems.ApiSystem.Impl
 
 				if (!specResponse.IsSuccessful)
 				{
-					throw new ApplicationException(specResponse.Content);
+					throw new AppException(specResponse.Content);
 				}
 
 				var openApiDiagnostic = default(OpenApiDiagnostic);
@@ -105,17 +106,17 @@ namespace Systems.ApiSystem.Impl
 
 				if (openApiDocument is null)
 				{
-					throw new ApplicationException("Failed to read spec : openApiDocument is null");
+					throw new AppException("Failed to read spec : openApiDocument is null");
 				}
 
 				if (openApiDiagnostic is null)
 				{
-					throw new ApplicationException("Failed to read spec : openApiDiagnostic is null");
+					throw new AppException("Failed to read spec : openApiDiagnostic is null");
 				}
 
 				if (openApiDiagnostic.SpecificationVersion != Microsoft.OpenApi.OpenApiSpecVersion.OpenApi3_0)
 				{
-					throw new ApplicationException("Specification is not version 3");
+					throw new AppException("Specification is not version 3");
 				}
 
 				foreach (var openApiWarning in openApiDiagnostic.Warnings)
@@ -130,12 +131,12 @@ namespace Systems.ApiSystem.Impl
 
 				if (openApiDiagnostic.Errors.Any())
 				{
-					throw new ApplicationException("Specification has errors");
+					throw new AppException("Specification has errors");
 				}
 			}
 			catch (Exception exception)
 			{
-				throw new ApplicationException("Failed to get spec from web api", exception);
+				throw new AppException("Failed to get spec from web api", exception);
 			}
 
 			// definitions
@@ -285,7 +286,7 @@ namespace Systems.ApiSystem.Impl
 
 				if (!response.IsSuccessful)
 				{
-					throw new ApplicationException(response.Content);
+					throw new AppException(response.Content);
 				}
 
 				_logger.LogInformation("{LogTag} : SUCCESS", logTag);
@@ -315,7 +316,7 @@ namespace Systems.ApiSystem.Impl
 
 				if (!response.IsSuccessful)
 				{
-					throw new ApplicationException(response.Content);
+					throw new AppException(response.Content);
 				}
 
 				RESOURCE_OBJECT_NAMES.Remove(resourceObject.LongName, out var _); // cleanup

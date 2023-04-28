@@ -62,12 +62,12 @@ namespace Systems.KubernetesSystem.HostedServices
 
 			if (string.IsNullOrWhiteSpace(Version))
 			{
-				throw new ApplicationException($"{nameof(Version)} is required");
+				throw new InvalidOperationException($"{nameof(Version)} is required");
 			}
 
 			if (string.IsNullOrWhiteSpace(NamePlural))
 			{
-				throw new ApplicationException($"{nameof(NamePlural)} is required");
+				throw new InvalidOperationException($"{nameof(NamePlural)} is required");
 			}
 
 			Group = Group?.Trim();

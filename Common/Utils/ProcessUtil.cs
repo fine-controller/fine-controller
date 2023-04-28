@@ -1,5 +1,6 @@
 ﻿using CliWrap;
 using CliWrap.Buffered;
+using Common.Exceptions;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -39,7 +40,7 @@ namespace Common.Utils
 			
 			if (result.ExitCode != 0)
 			{
-				throw new ApplicationException(result.StandardError);
+				throw new AppException(result.StandardError);
 			}
 
 			return result.StandardOutput;

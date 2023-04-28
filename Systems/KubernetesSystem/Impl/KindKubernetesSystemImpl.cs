@@ -23,6 +23,7 @@ namespace Systems.KubernetesSystem.Impl
 		private const string KUBE_CTL_FOLDER = "./KubernetesSystem/Assets/KubeCtl";
 		private const string INGRESS_NGINX_YAML_FILE = $"{KIND_FOLDER}/ingress-nginx.yaml";
 		private const string CLUSTER_CONFIGURATION_YAML_FILE = $"{KIND_FOLDER}/cluster-configuration.yaml";
+		private const string PLATFORM_NOT_SUPPORTED_MESSAGE = "Kind not supported on current platform. If you have some time to spare, please add your platform, it's easy :)";
 		
 		private readonly string _kindExecutableFile;
 		private readonly string _kubeCtlExecutableFile;
@@ -66,7 +67,7 @@ namespace Systems.KubernetesSystem.Impl
 						break;
 
 					default:
-						throw new ApplicationException("Not Supported");
+						throw new PlatformNotSupportedException(PLATFORM_NOT_SUPPORTED_MESSAGE);
 				}
 			}
 			else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
@@ -84,7 +85,7 @@ namespace Systems.KubernetesSystem.Impl
 						break;
 
 					default:
-						throw new ApplicationException("Not Supported");
+						throw new PlatformNotSupportedException(PLATFORM_NOT_SUPPORTED_MESSAGE);
 				}
 			}
 			else
@@ -102,7 +103,7 @@ namespace Systems.KubernetesSystem.Impl
 						break;
 
 					default:
-						throw new ApplicationException("Not Supported");
+						throw new PlatformNotSupportedException(PLATFORM_NOT_SUPPORTED_MESSAGE);
 				}
 			}
 
