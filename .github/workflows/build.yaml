@@ -1,5 +1,8 @@
 name: build
 
+env:
+  NAME: fine-kube-operator
+
 on:
 
   workflow_dispatch:
@@ -21,6 +24,19 @@ jobs:
     name: build
     runs-on: windows-latest
     steps:
+
+      - name: Get Current Time
+        uses: josStorer/get-current-time@v2.0.2
+        id: current-time
+        with:
+          format: YYYY.MM.DD.HHmm
+          utcOffset: "+00:00"
+
+      - name: Set Vars
+        uses: trevorlloydelliott/set-environment-variables@v1.0.0
+        with:
+          BUILD_NUMBER: ${{ steps.current-time.outputs.formattedTime }}
+          REGISTRY_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.NAME }}
 
       - name: Set up JDK 11
         uses: actions/setup-java@v3
@@ -64,3 +80,23 @@ jobs:
           .\.sonar\scanner\dotnet-sonarscanner begin /k:"fine-kube-operator_fine-kube-operator" /o:"fine-kube-operator" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.cs.opencover.reportsPaths="**/TestResults/*/coverage.opencover.xml"
           dotnet test FineKubeOperator.sln --collect:"XPlat Code Coverage;Format=opencover"
           .\.sonar\scanner\dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
+
+      - name: Build and push image
+        if: github.ref_name == 'main'
+        run: |
+          echo "${{ secrets.DOCKERHUB_TOKEN" | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+          docker build . --tag ${{ env.NAME }} --build-arg BUILD_NUMBER=${{ env.BUILD_NUMBER }}
+          docker image tag ${{ env.NAME }} ${{ env.REGISTRY_IMAGE }}:latest && docker image tag ${{ env.NAME }} ${{ env.REGISTRY_IMAGE }}:${{ env.BUILD_NUMBER }}
+          docker image push --all-tags ${{ env.REGISTRY_IMAGE }}
+
+      - name: push image README
+        if: github.ref_name == 'main'
+        uses: christian-korneck/update-container-description-action@v1
+        env:
+          DOCKER_USER: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKER_PASS: ${{ secrets.DOCKERHUB_TOKEN }}
+        with:
+          provider: dockerhub
+          readme_file: 'README.md'
+          short_description: ${{ env.NAME }}
+          destination_container_repo: ${{ env.REGISTRY_IMAGE }}
