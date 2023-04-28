@@ -65,9 +65,9 @@ hostApplicationLifetime.ApplicationStarted.Register(async () =>
 		await apiSystem.InitializeAsync(appCancellationToken.Token);
 		await kubernetesSystem.AddOrUpdateCustomResouceDefinitionsAsync(appData.CustomResourceDefinitions, appCancellationToken.Token);
 
-		foreach (var definition in appData.CustomResourceDefinitions)
+		foreach (var definitionSpec in appData.CustomResourceDefinitions.Select(x => x.Spec))
 		{
-			await kubernetesSystem.StartStreamingResourceObjectEventsAsync(definition.Spec.Group, definition.Spec.Versions[0].Name, definition.Spec.Names.Plural, appCancellationToken.Token);
+			await kubernetesSystem.StartStreamingResourceObjectEventsAsync(definitionSpec.Group, definitionSpec.Versions[0]!.Name, definitionSpec.Names.Plural, appCancellationToken.Token);
 		}
 
 		foreach (var knownKindApiEndpoints in appData.KnownKindApiEndpoints)
