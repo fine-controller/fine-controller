@@ -112,6 +112,7 @@ namespace Systems.KubernetesSystem.HostedServices
 						// dispose current listener (if any) and create a new one
 
 						DisposeListener();
+
 						_listener = new(logTag, _logger);
 
 						// start streaming
