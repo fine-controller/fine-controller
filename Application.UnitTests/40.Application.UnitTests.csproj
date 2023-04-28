@@ -4,6 +4,7 @@
 		<IsPackable>false</IsPackable>
 		<LangVersion>Latest</LangVersion>
 		<TargetFramework>net7.0</TargetFramework>
+		<SonarQubeTestProject>true</SonarQubeTestProject>
 		<AssemblyName>Application.UnitTests</AssemblyName>
 		<TreatWarningsAsErrors>True</TreatWarningsAsErrors>
 		<RootNamespace>Application.UnitTests</RootNamespace>

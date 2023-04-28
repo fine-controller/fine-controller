@@ -6,6 +6,7 @@
 		<TargetFramework>net7.0</TargetFramework>
 		<AssemblyName>Services.UnitTests</AssemblyName>
 		<RootNamespace>Services.UnitTests</RootNamespace>
+		<SonarQubeTestProject>true</SonarQubeTestProject>
 		<TreatWarningsAsErrors>True</TreatWarningsAsErrors>
 		<CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
 	</PropertyGroup>

@@ -4,6 +4,7 @@
 		<IsPackable>false</IsPackable>
 		<LangVersion>Latest</LangVersion>
 		<TargetFramework>net7.0</TargetFramework>
+		<SonarQubeTestProject>true</SonarQubeTestProject>
 		<TreatWarningsAsErrors>True</TreatWarningsAsErrors>
 		<AssemblyName>Application.IntegrationTests</AssemblyName>
 		<RootNamespace>Application.IntegrationTests</RootNamespace>

@@ -7,6 +7,7 @@
 		<AssemblyName>Application</AssemblyName>
 		<TargetFramework>net7.0</TargetFramework>
 		<RootNamespace>Application</RootNamespace>
+		<SonarQubeTestProject>false</SonarQubeTestProject>
 		<TreatWarningsAsErrors>True</TreatWarningsAsErrors>
 		<CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
 	</PropertyGroup>
