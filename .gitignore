@@ -351,3 +351,6 @@ MigrationBackup/
 
 # Test results
 **/TestResults
+
+# Coverage Xml
+**/coverage.xml

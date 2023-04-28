@@ -25,5 +25,6 @@
 **/launchSettings.json
 **/KubernetesSystem/Assets
 **/TestResults
+**/coverage.xml
 LICENSE
 README.md
