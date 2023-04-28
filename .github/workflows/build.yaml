@@ -82,9 +82,9 @@ jobs:
       - name: Build and push image
         if: github.ref_name == 'main'
         run: |
-          echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u fortunen --password-stdin
+          echo   "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u fortunen --password-stdin
           docker build . --build-arg BUILD_NUMBER=${{ env.BUILD_NUMBER }} --tag ${{ env.REGISTRY_IMAGE }}:latest --tag ${{ env.REGISTRY_IMAGE }}:${{ env.BUILD_NUMBER }}
           docker image push --all-tags ${{ env.REGISTRY_IMAGE }}
-          curl  -o $HOME/.docker/cli-plugins/docker-pushrm https://github.com/christian-korneck/docker-pushrm/releases/download/v1.9.0/docker-pushrm_linux_amd64 
-          chmod +x $HOME/.docker/cli-plugins/docker-pushrm
+          curl   -o /usr/local/lib/docker/docker-pushrm https://github.com/christian-korneck/docker-pushrm/releases/download/v1.9.0/docker-pushrm_linux_amd64 
+          chmod  +x /usr/local/lib/docker/docker-pushrm
           docker pushrm ${{ env.REGISTRY_IMAGE }} --file README.md
