@@ -18,13 +18,22 @@ namespace Systems.KubernetesSystem.Impl
 {
 	internal class KindKubernetesSystemImpl : KubernetesSystemImpl
 	{
+		private static readonly List<(OSPlatform OSPlatform, Architecture OSArchitecture, string KindPath, string KubeCtlPath)?> EXECUTABLES = new()
+		{
+			// ADD FILES TO FOLDERS AND ADD ENTRY HERE FOR YOUR PLATFORM
+			(OSPlatform.Windows, Architecture.X64, $"{KIND_FOLDER}/windows-amd64", $"{KUBE_CTL_FOLDER}/windows-amd64"),
+			(OSPlatform.OSX, Architecture.X64, $"{KIND_FOLDER}/darwin-amd64", $"{KUBE_CTL_FOLDER}/darwin-amd64"),
+			(OSPlatform.OSX, Architecture.Arm64, $"{KIND_FOLDER}/darwin-arm64", $"{KUBE_CTL_FOLDER}/darwin-arm64"),
+			(OSPlatform.Linux, Architecture.X64, $"{KIND_FOLDER}/darwin-amd64", $"{KUBE_CTL_FOLDER}/darwin-amd64"),
+			(OSPlatform.Linux, Architecture.Arm64, $"{KIND_FOLDER}/darwin-arm64", $"{KUBE_CTL_FOLDER}/darwin-arm64"),
+		};
+
 		private const string KIND_FOLDER = "./KubernetesSystem/Assets/Kind";
 		private const string EXAMPLE_YAML_FILE = $"{KIND_FOLDER}/example.yaml";
 		private const string KUBE_CTL_FOLDER = "./KubernetesSystem/Assets/KubeCtl";
 		private const string INGRESS_NGINX_YAML_FILE = $"{KIND_FOLDER}/ingress-nginx.yaml";
 		private const string CLUSTER_CONFIGURATION_YAML_FILE = $"{KIND_FOLDER}/cluster-configuration.yaml";
-		private const string PLATFORM_NOT_SUPPORTED_MESSAGE = "Kind not supported on current platform. If you have some time to spare, please add your platform, it's easy :)";
-		
+
 		private readonly string _kindExecutableFile;
 		private readonly string _kubeCtlExecutableFile;
 
@@ -53,63 +62,21 @@ namespace Systems.KubernetesSystem.Impl
 			_ = appCancellationToken ?? throw new ArgumentNullException(nameof(appCancellationToken));
 			_ = resourceObjectEventStreamerProvider ?? throw new ArgumentNullException(nameof(resourceObjectEventStreamerProvider));
 
-			// Determine which executable to use
+			// Determine which executables to use
 			
-			_logger.LogInformation("Operating System : Windows {OSArchitecture}", RuntimeInformation.OSArchitecture);
+			var executables = EXECUTABLES.SingleOrDefault(x => RuntimeInformation.IsOSPlatform(x.Value.OSPlatform) && x.Value.OSArchitecture == RuntimeInformation.OSArchitecture);
 
-			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+			if (executables is null)
 			{
-				switch (RuntimeInformation.OSArchitecture)
-				{
-					case Architecture.X64:
-						_kindExecutableFile = $"{KIND_FOLDER}/windows-amd64";
-						_kubeCtlExecutableFile = $"{KUBE_CTL_FOLDER}/windows-amd64";
-						break;
-
-					default:
-						throw new PlatformNotSupportedException(PLATFORM_NOT_SUPPORTED_MESSAGE);
-				}
-			}
-			else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-			{
-				switch (RuntimeInformation.OSArchitecture)
-				{
-					case Architecture.X64:
-						_kindExecutableFile = $"{KIND_FOLDER}/darwin-amd64";
-						_kubeCtlExecutableFile = $"{KUBE_CTL_FOLDER}/darwin-amd64";
-						break;
-
-					case Architecture.Arm64:
-						_kindExecutableFile = $"{KIND_FOLDER}/darwin-arm64";
-						_kubeCtlExecutableFile = $"{KUBE_CTL_FOLDER}/darwin-arm64";
-						break;
-
-					default:
-						throw new PlatformNotSupportedException(PLATFORM_NOT_SUPPORTED_MESSAGE);
-				}
-			}
-			else
-			{
-				switch (RuntimeInformation.OSArchitecture)
-				{
-					case Architecture.X64:
-						_kindExecutableFile = $"{KIND_FOLDER}/linux-amd64";
-						_kubeCtlExecutableFile = $"{KUBE_CTL_FOLDER}/linux-amd64";
-						break;
-
-					case Architecture.Arm64:
-						_kindExecutableFile = $"{KIND_FOLDER}/linux-arm64";
-						_kubeCtlExecutableFile = $"{KUBE_CTL_FOLDER}/linux-arm64";
-						break;
-
-					default:
-						throw new PlatformNotSupportedException(PLATFORM_NOT_SUPPORTED_MESSAGE);
-				}
+				throw new PlatformNotSupportedException("Not supported on current platform. If you have some time to spare, please add your platform, it's easy :)");
 			}
 
-			// Chmod the executable for non-windows OS
+			_logger.LogInformation("{OSPlatform} : {OSArchitecture}", executables.Value.OSPlatform, executables.Value.OSArchitecture);
 
-			if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+			_kindExecutableFile = executables.Value.KindPath;
+			_kubeCtlExecutableFile = executables.Value.KubeCtlPath;
+
+			if (executables.Value.OSPlatform != OSPlatform.Windows)
 			{
 				ProcessUtil.ExecuteAsync("chmod", new[] { "+x", _kindExecutableFile }, appCancellationToken.Token).GetAwaiter().GetResult();
 				ProcessUtil.ExecuteAsync("chmod", new[] { "+x", _kubeCtlExecutableFile }, appCancellationToken.Token).GetAwaiter().GetResult();
