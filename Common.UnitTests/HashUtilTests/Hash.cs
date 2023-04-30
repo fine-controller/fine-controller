@@ -5,7 +5,7 @@ using System;
 
 namespace Common.UnitTests.HashUtilTests
 {
-	internal class HashUtil_Hash
+	internal class Hash
 	{
 		[Test]
 		public void WhenInputIsNull_ThrowsArgumentNullException()
@@ -40,15 +40,15 @@ namespace Common.UnitTests.HashUtilTests
 		{
 			// arrange
 
-			string input = "Hello, world!";
+			var input = "Hello, world!";
 
 			// act
 			
-			string actualHash = HashUtil.Hash(input);
+			var actualHash = HashUtil.Hash(input);
 
 			// assert
 
-			actualHash.ShouldBe("3e25960a79dbc69b674cd4ec67a72c62");
+			actualHash.ShouldBe("6cd3556deb0da54bca060b4c39479839");
 		}
 	}
 }
