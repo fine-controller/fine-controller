@@ -6,14 +6,14 @@ EXPOSE 80
 
 FROM mcr.microsoft.com/dotnet/sdk:7.0-alpine AS build
 WORKDIR /src
-COPY ["./Application/40.Application.csproj", "./Application/40.Application.csproj"]
-RUN dotnet restore "Application/40.Application.csproj"
+COPY ["./Application/30.Application.csproj", "./Application/30.Application.csproj"]
+RUN dotnet restore "Application/30.Application.csproj"
 COPY . .
 WORKDIR "/src/."
-RUN dotnet build "Application/40.Application.csproj" -c Release -o /app/build
+RUN dotnet build "Application/30.Application.csproj" -c Release -o /app/build
 
 FROM build AS publish
-RUN dotnet publish "Application/40.Application.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "Application/30.Application.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app

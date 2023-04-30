@@ -1,0 +1,19 @@
+{
+  "ServerUri": "https://sonarcloud.io/",
+  "Organization": {
+    "Key": "fine-kube-operator",
+    "Name": "fine-kube-operator"
+  },
+  "ProjectKey": "fine-kube-operator",
+  "ProjectName": "fine-kube-operator",
+  "Profiles": {
+    "CSharp": {
+      "ProfileKey": "AYfHYdwdtOhQkzHi2fuq",
+      "ProfileTimestamp": "2023-04-20T10:52:15Z"
+    },
+    "Secrets": {
+      "ProfileKey": "AYfHYdwdtOhQkzHi2fuU",
+      "ProfileTimestamp": "2023-01-25T09:40:14Z"
+    }
+  }
+}

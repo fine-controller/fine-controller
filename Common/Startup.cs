@@ -5,7 +5,7 @@ using System;
 
 namespace Common
 {
-    public static class Startup
+	public static class Startup
 	{
 		public static IServiceCollection AddCommon(this IServiceCollection services, AppSettings appSettings)
 		{

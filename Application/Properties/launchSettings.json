@@ -11,7 +11,8 @@
 				"API_HTTPS": "false",
 				"API_GROUP": "example.io",
 				"API_SPEC_FORMAT": "json",
-				"API_SPEC_PATH": "swagger/v1/swagger.json"
+				"API_SPEC_PATH": "swagger/v1/swagger.json",
+				"POD_NAMESPACE": "default"
 			}
 		}
 	}

@@ -19,7 +19,7 @@ namespace Common.Utils
 			return $"{group.Trim()}/{version.Trim()}";
 		}
 
-		public static string GetKindLongName(string group, string version, string kind)
+		public static string GetLongKind(string group, string version, string kind)
 		{
 			if (string.IsNullOrWhiteSpace(group))
 			{
@@ -66,7 +66,7 @@ namespace Common.Utils
 				@namespace = "-";
 			}
 
-			return $"{GetKindLongName(group, version, kind)}/{@namespace.Trim()}/{name.Trim()}";
+			return $"{GetLongKind(group, version, kind)}/{@namespace.Trim()}/{name.Trim()}";
 		}
 	}
 }

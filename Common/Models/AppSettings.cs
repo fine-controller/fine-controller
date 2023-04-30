@@ -1,5 +1,6 @@
 ﻿using Common.Attributes;
 using System.ComponentModel.DataAnnotations;
+using System.IO;
 
 namespace Common.Models
 {
@@ -7,10 +8,11 @@ namespace Common.Models
 	{
 		public string RootPath { get; set; }
 		public bool IsProduction { get; set; }
+		public string DataPath => Path.Combine(RootPath, "data");
 
 		[Trim]
 		[Required]
-		[RegularExpression(@"^(?=.{1,253}$)(?:[a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])(?:\.(?:[a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9]))*$")]
+		[RegularExpression(@"^(?=.{1,253}$)(?:[a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])(?:\.(?:[a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9]))*$", ErrorMessage = "Invalid API host")]
 		public string API_HOST { get; set; }
 
 		[Required]
@@ -22,7 +24,7 @@ namespace Common.Models
 
 		[Trim]
 		[Required]
-		[RegularExpression(@"^(/?[^?#]*)(\?[^#]*)?(#.*)?$")]
+		[RegularExpression(@"^(/?[^?#]*)(\?[^#]*)?(#.*)?$", ErrorMessage = "Invalid spec path")]
 		public string API_SPEC_PATH { get; set; }
 		
 		[Required]
@@ -30,7 +32,7 @@ namespace Common.Models
 
 		[Trim]
 		[Required]
-		[RegularExpression(@"^(?=.{1,253}$)(?:[a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])(?:\.(?:[a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9]))*$")]
+		[RegularExpression(@"^(?=.{1,253}$)(?:[a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])(?:\.(?:[a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9]))*$", ErrorMessage = "Invalid API group name")]
 		public string API_GROUP { get; set; }
 	}
 }

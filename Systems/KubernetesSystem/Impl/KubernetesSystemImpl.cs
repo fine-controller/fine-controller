@@ -1,5 +1,4 @@
 ﻿using Common.Models;
-using Common.Utils;
 using Humanizer;
 using k8s;
 using k8s.Autorest;
@@ -12,7 +11,6 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Systems.BackgroundServiceSystem;
-using Systems.KubernetesSystem.HostedServices;
 using Systems.KubernetesSystem.Models;
 
 namespace Systems.KubernetesSystem.Impl
@@ -23,22 +21,19 @@ namespace Systems.KubernetesSystem.Impl
 		protected readonly AppSettings _appSettings;
 		protected readonly KubernetesClient _kubernetesClient;
 		protected readonly IHostedServiceSystem _hostedServiceSystem;
-		protected readonly IServiceProvider<ResourceObjectEventStreamer> _resourceObjectEventStreamerProvider;
 		
 		public KubernetesSystemImpl
 		(
 			AppSettings appSettings,
 			KubernetesClient kubernetesClient,
 			ILogger<KubernetesSystemImpl> logger,
-			IHostedServiceSystem hostedServiceSystem,
-			IServiceProvider<ResourceObjectEventStreamer> resourceObjectEventStreamerProvider
+			IHostedServiceSystem hostedServiceSystem
 		)
 		{
 			_logger = logger ?? throw new ArgumentNullException(nameof(logger));
 			_appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
 			_kubernetesClient = kubernetesClient ?? throw new ArgumentNullException(nameof(kubernetesClient));
 			_hostedServiceSystem = hostedServiceSystem ?? throw new ArgumentNullException(nameof(hostedServiceSystem));
-			_resourceObjectEventStreamerProvider = resourceObjectEventStreamerProvider ?? throw new ArgumentNullException(nameof(resourceObjectEventStreamerProvider));
 
 			// client
 
@@ -46,61 +41,6 @@ namespace Systems.KubernetesSystem.Impl
 			{
 				kubernetesClient.Client = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig());
 			}
-		}
-
-		private string GetResourceObjectEventStreamerName(string group, string version, string namePlural)
-		{
-			if (string.IsNullOrWhiteSpace(group))
-			{
-				group = "-";
-			}
-
-			if (string.IsNullOrWhiteSpace(version))
-			{
-				throw new ArgumentNullException(nameof(version));
-			}
-
-			if (string.IsNullOrWhiteSpace(namePlural))
-			{
-				throw new ArgumentNullException(nameof(namePlural));
-			}
-
-			group = group?.Trim();
-			version = version.Trim();
-			namePlural = namePlural.Trim();
-
-			return $"{nameof(ResourceObjectEventStreamer)}:{NameUtil.GetKindLongName(group, version, namePlural)}";
-		}
-
-		public async Task StartStreamingResourceObjectEventsAsync(string group, string version, string namePlural, CancellationToken cancellationToken)
-		{
-			if (string.IsNullOrWhiteSpace(group))
-			{
-				group = "-";
-			}
-
-			if (string.IsNullOrWhiteSpace(version))
-			{
-				throw new ArgumentNullException(nameof(version));
-			}
-
-			if (string.IsNullOrWhiteSpace(namePlural))
-			{
-				throw new ArgumentNullException(nameof(namePlural));
-			}
-
-			group = group?.Trim();
-			version = version.Trim();
-			namePlural = namePlural.Trim();
-			
-			var resourceObjectEventStreamer = _resourceObjectEventStreamerProvider.GetRequiredService();
-			var resourceObjectEventStreamerName = GetResourceObjectEventStreamerName(group, version, namePlural);
-			
-			resourceObjectEventStreamer.Group = group;
-			resourceObjectEventStreamer.Version = version;
-			resourceObjectEventStreamer.NamePlural = namePlural;
-
-			await _hostedServiceSystem.AddAsync(resourceObjectEventStreamerName, resourceObjectEventStreamer, cancellationToken);
 		}
 
 		public async Task AddOrUpdateCustomResouceDefinitionsAsync(IEnumerable<CustomResourceDefinitionResourceObject> customResourceDefinitions, CancellationToken cancellationToken)

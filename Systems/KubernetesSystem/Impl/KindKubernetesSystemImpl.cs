@@ -11,9 +11,7 @@ using System.Net;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Xml.Linq;
 using Systems.BackgroundServiceSystem;
-using Systems.KubernetesSystem.HostedServices;
 using Systems.KubernetesSystem.Models;
 
 namespace Systems.KubernetesSystem.Impl
@@ -45,16 +43,14 @@ namespace Systems.KubernetesSystem.Impl
 			KubernetesClient kubernetesClient,
 			ILogger<KindKubernetesSystemImpl> logger,
 			IHostedServiceSystem hostedServiceSystem,
-			AppCancellationToken appCancellationToken,
-			IServiceProvider<ResourceObjectEventStreamer> resourceObjectEventStreamerProvider
+			AppCancellationToken appCancellationToken
 		)
 		: base
 		(
 			appSettings,
 			kubernetesClient,
 			logger,
-			hostedServiceSystem,
-			resourceObjectEventStreamerProvider
+			hostedServiceSystem
 		)
 		{
 			_ = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -62,7 +58,6 @@ namespace Systems.KubernetesSystem.Impl
 			_ = kubernetesClient ?? throw new ArgumentNullException(nameof(kubernetesClient));
 			_ = hostedServiceSystem ?? throw new ArgumentNullException(nameof(hostedServiceSystem));
 			_ = appCancellationToken ?? throw new ArgumentNullException(nameof(appCancellationToken));
-			_ = resourceObjectEventStreamerProvider ?? throw new ArgumentNullException(nameof(resourceObjectEventStreamerProvider));
 
 			// Determine which executables to use
 
@@ -202,7 +197,7 @@ namespace Systems.KubernetesSystem.Impl
 			}
 			else
 			{
-				_logger.LogInformation("Creating Cluster {Name}", Constants.FineKubeOperator);
+				_logger.LogInformation("Creating Cluster {Name}", Constants.AppName);
 
 				await CreateClusterAsync(cancellationToken);
 				await WaitForClusterAsync(cancellationToken);
@@ -212,12 +207,12 @@ namespace Systems.KubernetesSystem.Impl
 		private async Task<bool> ClusterExistsAsync(CancellationToken cancellationToken)
 		{
 			var result = await ProcessUtil.ExecuteAsync(_kindExecutableFile, new[] { "get", "clusters" }, cancellationToken);
-			return result.Trim().Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).Any(x => x.Equals(Constants.FineKubeOperator));
+			return result.Trim().Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).Any(x => x.Equals(Constants.AppName));
 		}
 
 		private async Task CreateClusterAsync(CancellationToken cancellationToken)
 		{
-			await ProcessUtil.ExecuteAsync(_kindExecutableFile, new[] { "create", "cluster", "--name", Constants.FineKubeOperator, "--config", CLUSTER_CONFIGURATION_YAML_FILE }, cancellationToken);
+			await ProcessUtil.ExecuteAsync(_kindExecutableFile, new[] { "create", "cluster", "--name", Constants.AppName, "--config", CLUSTER_CONFIGURATION_YAML_FILE }, cancellationToken);
 		}
 
 		private async Task WaitForClusterAsync(CancellationToken cancellationToken)
@@ -232,7 +227,7 @@ namespace Systems.KubernetesSystem.Impl
 
 		private async Task<string> GetClusterKubeConfigAsync(CancellationToken cancellationToken)
 		{
-			return await ProcessUtil.ExecuteAsync(_kindExecutableFile, new[] { "get", "kubeconfig", "--name", Constants.FineKubeOperator }, cancellationToken);
+			return await ProcessUtil.ExecuteAsync(_kindExecutableFile, new[] { "get", "kubeconfig", "--name", Constants.AppName }, cancellationToken);
 		}
 
 		private async Task EnsureIngressNginxIsRunningAsync(CancellationToken cancellationToken)

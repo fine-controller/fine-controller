@@ -9,7 +9,7 @@ namespace Common.Models
 {
 	public class ResourceObject : IKubernetesObject, IMetadata<V1ObjectMeta>
 	{
-		private readonly JsonObject _data;
+		private JsonObject _data;
 
 		public string Kind
 		{
@@ -63,6 +63,14 @@ namespace Common.Models
 			}
 		}
 
+		public string LongKind
+		{
+			get
+			{
+				return NameUtil.GetLongKind(this.ApiGroup(), this.ApiGroupVersion(), Kind);
+			}
+		}
+
 		public WatchEventType EventType
 		{
 			get
@@ -78,10 +86,15 @@ namespace Common.Models
 			}
 		}
 
-		public ResourceObject(JsonObject data, WatchEventType eventType)
+		public ResourceObject(WatchEventType eventType, JsonObject data)
+		{
+			Update(eventType, data);
+		}
+
+		public void Update(WatchEventType eventType, JsonObject data)
 		{
 			_data = data ?? throw new ArgumentNullException(nameof(data));
-			
+
 			_data[Constants.MetadataCamelCase] ??= new JsonObject();
 			_data[Constants.MetadataCamelCase][Constants.LabelsCamelCase] ??= new JsonObject();
 			_data[Constants.MetadataCamelCase][Constants.LabelsCamelCase][Constants.EventTypeDashCase] = eventType.ToString();

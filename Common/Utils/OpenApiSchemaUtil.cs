@@ -1,6 +1,7 @@
 ﻿using k8s.Models;
 using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
+using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -16,7 +17,7 @@ namespace Common.Utils
 			}
 
 			var k = new V1JSONSchemaProps();
-
+			
 			k.Type = api.Type;
 			k.Title = api.Title;
 			k.Format = api.Format;

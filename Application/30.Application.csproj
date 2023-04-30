@@ -10,6 +10,7 @@
 		<SonarQubeTestProject>false</SonarQubeTestProject>
 		<TreatWarningsAsErrors>True</TreatWarningsAsErrors>
 		<CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
+		<CodeAnalysisRuleSet>..\.sonarlint\fine-kube-operatorcsharp.ruleset</CodeAnalysisRuleSet>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -22,11 +23,15 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\Services\30.Services.csproj" />
+	  <AdditionalFiles Include="..\.sonarlint\fine-kube-operator\CSharp\SonarLint.xml" Link="SonarLint.xml" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<None Include="..\.editorconfig" Link=".editorconfig" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\Systems\20.Systems.csproj" />
 	</ItemGroup>
 
 </Project>

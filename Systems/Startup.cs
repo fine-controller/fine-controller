@@ -8,13 +8,12 @@ using Systems.ApiSystem.Impl;
 using Systems.BackgroundServiceSystem;
 using Systems.HostedServiceSystem.Impl;
 using Systems.KubernetesSystem;
-using Systems.KubernetesSystem.HostedServices;
 using Systems.KubernetesSystem.Impl;
 using Systems.KubernetesSystem.Models;
 
 namespace Systems
 {
-    public static class Startup
+	public static class Startup
 	{
 		public static IServiceCollection AddSystems(this IServiceCollection services, AppSettings appSettings)
 		{
@@ -32,7 +31,6 @@ namespace Systems
 			
 			services.AddSingleton<KubernetesClient>();
 			services.AddSingleton<IApiSystem, ApiSystemImpl>();
-			services.AddTransient<ResourceObjectEventStreamer>();
 			services.AddSingleton<IHostedServiceSystem, HostedServiceSystemImpl>();
 			services.AddSingleton<IKubernetesSystem, KubernetesSystemImpl, KindKubernetesSystemImpl>(appSettings);
 
