@@ -2,6 +2,7 @@
 using CliWrap.Buffered;
 using System;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -63,9 +64,11 @@ namespace Common.Utils
 		}
 	}
 
-	public sealed class ProcessUtilException : Exception
+	[Serializable]
+	public class ProcessUtilException : ApplicationException
 	{
 		public ProcessUtilException(string message) : base(message) { }
 		public ProcessUtilException(string message, Exception innerException) : base(message, innerException) { }
+		protected ProcessUtilException(SerializationInfo info, StreamingContext context) : base(info, context) { }
 	}
 }

@@ -58,33 +58,17 @@ namespace Application.HostedServices
 		}
 
         public async Task StartAsync(CancellationToken cancellationToken)
-        {
-			if (string.IsNullOrWhiteSpace(Group) || Group == "-")
-			{
-				Group = string.Empty;
-			}
-
-			if (string.IsNullOrWhiteSpace(Version))
-			{
-				throw new InvalidOperationException($"{nameof(Version)} is required");
-			}
-
-			if (string.IsNullOrWhiteSpace(NamePlural))
-			{
-				throw new InvalidOperationException($"{nameof(NamePlural)} is required");
-			}
-
+		{
 			// init
 
-			Group = Group?.Trim();
-			Version = Version.Trim();
-			NamePlural = NamePlural.Trim();
-			_fileStorage = new FileStorage(Path.Combine(_appSettings.DataPath, NameUtil.GetLongKind(Group, Version, NamePlural)));
+			CheckParameters();
 
 			// vars
 
 			var isReconnecting = false;
 			var logTag = $"{NameUtil.GetLongKind(Group, Version, NamePlural)} Events";
+
+			_fileStorage = new FileStorage(Path.Combine(_appSettings.DataPath, NameUtil.GetLongKind(Group, Version, NamePlural)));
 
 			// connect
 
@@ -108,10 +92,8 @@ namespace Application.HostedServices
 						{
 							await Task.Delay(2000, cancellationToken);
 						}
-						else
-						{
-							isReconnecting = true; // it's all reconnections from now on
-						}
+
+						isReconnecting = true; // it's all reconnections from now on
 
 						// dispose current listener (if any) and create a new one
 
@@ -136,7 +118,7 @@ namespace Application.HostedServices
 						// stream new events
 
 						_listener.HttpOperationResponse = await _kubernetesClient.Client.CustomObjects.ListClusterCustomObjectWithHttpMessagesAsync(Group, Version, NamePlural, allowWatchBookmarks: false, watch: true, cancellationToken: cancellationToken);
-						
+
 						_listener.Watcher = _listener.HttpOperationResponse.Watch
 						(
 							onEvent: async (WatchEventType eventType, object eventData) =>
@@ -184,6 +166,28 @@ namespace Application.HostedServices
 			// force async
 
 			await Task.CompletedTask;
+		}
+
+		private void CheckParameters()
+		{
+			if (string.IsNullOrWhiteSpace(Group) || Group == "-")
+			{
+				Group = string.Empty;
+			}
+
+			if (string.IsNullOrWhiteSpace(Version))
+			{
+				throw new InvalidOperationException($"{nameof(Version)} is required");
+			}
+
+			if (string.IsNullOrWhiteSpace(NamePlural))
+			{
+				throw new InvalidOperationException($"{nameof(NamePlural)} is required");
+			}
+
+			Group = Group?.Trim();
+			Version = Version.Trim();
+			NamePlural = NamePlural.Trim();
 		}
 
 		private async Task OnEventAsync(WatchEventType eventType, JsonObject eventData, CancellationToken cancellationToken)
