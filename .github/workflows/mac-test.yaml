@@ -1,0 +1,12 @@
+name: mac-test
+on:
+  workflow_dispatch:
+jobs:
+  build:
+    name: mac-test
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - run: cd Application && dotnet run --project 30.Application.csproj
