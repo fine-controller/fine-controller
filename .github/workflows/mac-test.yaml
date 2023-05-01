@@ -9,4 +9,6 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
+      - uses: docker-practice/actiond-setup-docker@master
+        timeout-minutes: 5
       - run: cd Application && dotnet run --project 30.Application.csproj
