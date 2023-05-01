@@ -10,5 +10,5 @@ jobs:
         with:
           fetch-depth: 0
       - uses: docker-practice/actions-setup-docker@master
-        timeout-minutes: 5
+        timeout-minutes: 20
       - run: cd Application && dotnet run --project 30.Application.csproj
