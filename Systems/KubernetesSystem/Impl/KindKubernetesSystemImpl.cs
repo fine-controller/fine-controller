@@ -4,6 +4,7 @@ using Humanizer;
 using k8s;
 using k8s.Autorest;
 using Microsoft.Extensions.Logging;
+using SharpYaml.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,6 +19,13 @@ namespace Systems.KubernetesSystem.Impl
 {
 	internal class KindKubernetesSystemImpl : KubernetesSystemImpl
 	{
+		private static readonly string KIND_FOLDER = System.IO.Path.GetFullPath("./KubernetesSystem/Assets/Kind");
+		private static readonly string KUBE_CTL_FOLDER = System.IO.Path.GetFullPath("./KubernetesSystem/Assets/KubeCtl");
+
+		private static readonly string EXAMPLE_YAML_FILE = $"{KIND_FOLDER}/example.yaml";
+		private static readonly string INGRESS_NGINX_YAML_FILE = $"{KIND_FOLDER}/ingress-nginx.yaml";
+		private static readonly string CLUSTER_CONFIGURATION_YAML_FILE = $"{KIND_FOLDER}/cluster-configuration.yaml";
+
 		private static readonly List<(OSPlatform OSPlatform, Architecture OSArchitecture, string KindPath, string KubeCtlPath)?> EXECUTABLES = new()
 		{
 			// ADD FILES TO FOLDERS AND ADD ENTRY HERE FOR YOUR PLATFORM
@@ -27,12 +35,6 @@ namespace Systems.KubernetesSystem.Impl
 			(OSPlatform.Linux, Architecture.X64, $"{KIND_FOLDER}/darwin-amd64", $"{KUBE_CTL_FOLDER}/darwin-amd64"),
 			(OSPlatform.Linux, Architecture.Arm64, $"{KIND_FOLDER}/darwin-arm64", $"{KUBE_CTL_FOLDER}/darwin-arm64"),
 		};
-
-		private const string KIND_FOLDER = "./KubernetesSystem/Assets/Kind";
-		private const string EXAMPLE_YAML_FILE = $"{KIND_FOLDER}/example.yaml";
-		private const string KUBE_CTL_FOLDER = "./KubernetesSystem/Assets/KubeCtl";
-		private const string INGRESS_NGINX_YAML_FILE = $"{KIND_FOLDER}/ingress-nginx.yaml";
-		private const string CLUSTER_CONFIGURATION_YAML_FILE = $"{KIND_FOLDER}/cluster-configuration.yaml";
 
 		private readonly string _kindExecutableFile;
 		private readonly string _kubeCtlExecutableFile;
