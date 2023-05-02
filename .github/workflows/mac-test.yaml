@@ -10,4 +10,10 @@ jobs:
         with:
           fetch-depth: 0
       - run: brew install --cask docker
+      - run:
+          until cat missingfile
+          do
+              echo waiting for missingfile
+              sleep 10
+          done
       - run: cd Application && dotnet run --project 30.Application.csproj
