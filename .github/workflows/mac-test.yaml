@@ -10,10 +10,5 @@ jobs:
         with:
           fetch-depth: 0
       - run: brew install --cask docker
-      - run: >-
-          until docker ps
-          do
-              echo waiting for docker
-              sleep 5
-          done
+      - run: while ! docker ps > /dev/null 2>&1; do echo "Waiting for Docker..."; sleep 5; done; echo "Docker is ready."
       - run: cd Application && dotnet run --project 30.Application.csproj
